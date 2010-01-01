@@ -1,11 +1,14 @@
 {-# LANGUAGE
   EmptyDataDecls
   , MultiParamTypeClasses
+  , Rank2Types
   #-}
 
 module FaH.Types where
 
 import Data.Tagged
+
+import Database.HDBC
 
 
 data PRun
@@ -14,27 +17,23 @@ data PClone
 type Run = Tagged PRun Integer
 type Clone = Tagged PClone Integer
 
-class Location a where location :: a -> FilePath
+data TrajectoryLocation = TrajLoc Run Clone FilePath
 
 data Project = Project {
-      runs     :: [Run]
-    , clones   :: [Clone]
-    , _proj_location :: FilePath
+      trajectories :: [Trajectory]
     } deriving (Eq, Show)
 
 data Trajectory = Trajectory {
       run            :: Run
     , clone          :: Clone
-    , _traj_location :: FilePath
-    }
-
-instance Location Project    where location = _proj_location
-instance Location Trajectory where location = _traj_location
+    , location :: FilePath
+    } deriving (Eq, Show)
 
 
 type Action = IO ()
 
-type Tool = Trajectory -> Action
-
+type Tool = TrajectoryLocation -> Action
 
 class Apply a b c where apply :: a -> b -> c
+
+type DBTool = IConnection c => c -> Tool

@@ -10,19 +10,28 @@ import FaH.Types
 
 import Control.Monad (mapM_, sequence_)
 
-applyTool :: Tool -> Trajectory -> Action
+applyTool :: Tool -> TrajectoryLocation -> Action
 applyTool t = t
 
-applyAllTools :: [Tool] -> Trajectory -> [Action]
+applyAllTools :: [Tool] -> TrajectoryLocation -> [Action]
 applyAllTools ts ps = map (flip applyTool ps) ts
 
-doAllTools :: [Tool] -> Trajectory -> Action
+doAllTools :: [Tool] -> TrajectoryLocation -> Action
 doAllTools ts = sequence_ . applyAllTools ts
 
-doAllTrajs :: [Tool] -> [Trajectory] -> Action
+doAllTrajs :: [Tool] -> [TrajectoryLocation] -> Action
 doAllTrajs ts trajs = mapM_ (doAllTools ts) trajs
 
-instance Apply Tool Trajectory Action     where apply = applyTool
-instance Apply [Tool] Trajectory [Action] where apply = applyAllTools
-instance Apply [Tool] Trajectory Action   where apply = doAllTools
-instance Apply [Tool] [Trajectory] Action where apply = doAllTrajs
+instance Apply Tool TrajectoryLocation Action     where apply = applyTool
+instance Apply [Tool] TrajectoryLocation [Action] where apply = applyAllTools
+instance Apply [Tool] TrajectoryLocation Action   where apply = doAllTools
+instance Apply [Tool] [TrajectoryLocation] Action where apply = doAllTrajs
+
+
+
+mkTrajectory :: Run -> Clone -> FilePath -> Trajectory
+mkTrajectory r c p = Trajectory { run = r, clone = c, location = p }
+
+mkProject :: [Trajectory] -> Project
+mkProject = Project
+
