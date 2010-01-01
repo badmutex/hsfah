@@ -1,15 +1,28 @@
+{-# LANGUAGE
+  FlexibleInstances
+  , MultiParamTypeClasses
+  , TypeSynonymInstances
+  #-}
 
 module FaH.Tool where
 
 import FaH.Types
 
-import Control.Monad
+import Control.Monad (mapM_, sequence_)
 
-apply :: Tool -> Project -> Action
-apply t = t
+applyTool :: Tool -> Trajectory -> Action
+applyTool t = t
 
-applyAll :: [Tool] -> Project -> [Action]
-applyAll ts ps = map (flip apply ps) ts
+applyAllTools :: [Tool] -> Trajectory -> [Action]
+applyAllTools ts ps = map (flip applyTool ps) ts
 
-doAll :: [Tool] -> Project -> Action
-doAll ts = sequence_ . applyAll ts
+doAllTools :: [Tool] -> Trajectory -> Action
+doAllTools ts = sequence_ . applyAllTools ts
+
+doAllTrajs :: [Tool] -> [Trajectory] -> Action
+doAllTrajs ts trajs = mapM_ (doAllTools ts) trajs
+
+instance Apply Tool Trajectory Action     where apply = applyTool
+instance Apply [Tool] Trajectory [Action] where apply = applyAllTools
+instance Apply [Tool] Trajectory Action   where apply = doAllTools
+instance Apply [Tool] [Trajectory] Action where apply = doAllTrajs
