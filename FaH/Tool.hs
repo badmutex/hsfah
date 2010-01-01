@@ -1,6 +1,3 @@
-{-# LANGUAGE
-  ExistentialQuantification
-  #-}
 
 module FaH.Tool where
 
@@ -8,11 +5,11 @@ import FaH.Types
 
 import Control.Monad
 
-applyTool :: Tool a -> ToolParameters -> Action a
-applyTool (Tool f) = f
+apply :: Tool -> Project -> Action
+apply t = t
 
-applyTools :: forall a. [Tool a] -> ToolParameters -> [Action a]
-applyTools ts ps = map (flip applyTool ps) ts
+applyAll :: [Tool] -> Project -> [Action]
+applyAll ts ps = map (flip apply ps) ts
 
-doTools :: forall a. [Tool a] -> ToolParameters -> Action ()
-doTools ts = sequence_ . applyTools ts
+doAll :: [Tool] -> Project -> Action
+doAll ts = sequence_ . applyAll ts

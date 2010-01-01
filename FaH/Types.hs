@@ -1,6 +1,5 @@
 {-# LANGUAGE
   EmptyDataDecls
-  , RankNTypes
   #-}
 
 module FaH.Types where
@@ -20,8 +19,7 @@ data Project = Project {
     , location :: FilePath
     } deriving (Eq, Show)
 
-data ToolParameters = Params Run Clone FilePath deriving (Eq, Show)
 
-type Action = IO
+type Action = IO ()
 
-newtype Tool a = Tool (ToolParameters -> Action a)
+type Tool = Project -> Action
