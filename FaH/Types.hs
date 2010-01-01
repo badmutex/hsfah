@@ -8,7 +8,7 @@ module FaH.Types where
 
 import Data.Tagged
 
-import Database.HDBC
+import qualified  Database.HDBC as DB
 
 
 data PRun
@@ -30,10 +30,14 @@ data Trajectory = Trajectory {
     } deriving (Eq, Show)
 
 
-type Action = IO ()
+type Stat a = Either String a
+type Status = Stat ()
+
+type Action = IO Status
 
 type Tool = TrajectoryLocation -> Action
 
 class Apply a b c where apply :: a -> b -> c
 
-type DBTool = IConnection c => c -> Tool
+type DBTool = DB.IConnection c => c -> Tool
+
