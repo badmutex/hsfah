@@ -21,12 +21,12 @@ import Database.HDBC.MySQL
 import Text.Printf
 
 
-newtype DBName = DBName String           deriving Show
-newtype TableName = TableName String     deriving Show
-newtype TableCreate = TableCreate String deriving Show
-newtype ColName = ColName String         deriving Show
-newtype ColDesc = ColDesc String  deriving Show
-newtype TableDesc = TableDesc String     deriving Show
+newtype TableCreate = TableCreate String deriving Show -- ^ passed to HDBC to create the table
+newtype DBName      = DBName String      deriving Show
+newtype TableName   = TableName String   deriving Show
+newtype ColName     = ColName String     deriving Show
+newtype ColDesc     = ColDesc String     deriving Show -- ^ used in the creation of a table
+newtype TableDesc   = TableDesc String   deriving Show -- ^ 'create table <name> ( <desc> )'"
 
 _master_table =
     let pf    = printf
@@ -48,8 +48,8 @@ tableCreate (TableName name) (TableDesc desc) =
 
 newTable :: ColDesc -> TableName -> TableCreate
 newTable (ColDesc col) =
-    let master = printf "structure_id %s unsigned not null" _db_structure_id_type
-        rep    = printf "rep %s unsigned not null auto_increment" _db_rep_type
+    let master  = printf "structure_id %s unsigned not null"       _db_structure_id_type
+        rep     = printf "rep %s unsigned not null auto_increment" _db_rep_type
         foreign = printf "foreign key (%s) references master(%s)" "structure_id" "structure_id"
         primary = printf "primary key (%s)" "structure_id, rep"
         desc = intercalate ", " [rep, master, col, foreign, primary]
@@ -68,15 +68,15 @@ doAddTable t = doCreateTables [t]
 
 
 
-test =  do
-         c <- connectMySQL defaultMySQLConnectInfo {
-                        mysqlHost = "localhost"
-                      , mysqlUser = "badi"
-                      , mysqlDatabase = "test"
-                      , mysqlUnixSocket = "/var/run/mysqld/mysqld.sock"
-                      }
+test = do
+  c <- connectMySQL defaultMySQLConnectInfo {
+         mysqlHost = "localhost"
+       , mysqlUser = "badi"
+       , mysqlDatabase = "test"
+       , mysqlUnixSocket = "/var/run/mysqld/mysqld.sock"
+       }
 
-         let ts = [uncurry tableCreate _master_table, newTable (ColDesc "bar float") (TableName "foo")]
-         doCreateTables ts c
+  let ts = [uncurry tableCreate _master_table, newTable (ColDesc "bar float") (TableName "foo")]
+  doCreateTables ts c
 
-         DB.disconnect c
+  DB.disconnect c
