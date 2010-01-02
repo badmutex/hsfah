@@ -123,6 +123,31 @@ insertIntoMaster vals c =
       executeMany ps vs
 
 
+insert :: (Convertible v SqlValue, IConnection c) =>
+          c -> TableName -> ColName -> [(Run, Clone, Frame)] -> [v] -> IO ()
+insert c (TableName tn) (ColName cn) structs vals =
+    let s = printf
+            "insert into %s (%s,%s) values (?,?)"
+            tn
+            _db_struct_id
+            cn
+        vs = zipWith mk structs vals
+
+        mk rcf v = [toSql $ uncurry3 mkStructId rcf, toSql v]
+
+        -- insertion into a table other than master can result in duplicates.
+        -- this is expected (reason for 'rep' column), so ignore the exception
+        checkMaster = insertIntoMaster structs c
+                      `catchSql`
+                      \e -> if seNativeError e == 1062 -- duplicate entry
+                            then return ()
+                            else throwSqlError e
+    in do
+      checkMaster
+      ps <- prepare c s
+      executeMany ps vs
+
+
 
 -- Creates the tables, does not insert anything
 doCreateTables :: IConnection c => [TableCreate] -> c -> IO ()
