@@ -14,8 +14,8 @@
 
 module FaH.DB where
 
-import FaH.Tool
 import FaH.Types
+import FaH.Util
 
 import Control.Applicative ((<$>))
 import Data.Convertible
@@ -192,6 +192,6 @@ test = handleSqlError $ do
   -- rs' <- countRows c (TableName "master")
   -- printf "Master has %d rows\n" rs'
 
-  -- insert c (TableName "foo") (ColName "bar") structs ([1..10] :: [Integer])
+  insert c (TableName "foo") (ColName "bar") structs ([1..10] :: [Integer])
 
   disconnect c
