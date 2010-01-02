@@ -15,6 +15,7 @@ data PRun
 data PClone
 data PProjArea
 data PWorkArea
+data PTrajPath
 
 -- if the types need to be changed in the database, 
 -- this is the place to do so
@@ -30,7 +31,7 @@ type Run      = Tagged PRun Integer
 type Clone    = Tagged PClone Integer
 type WorkArea = Tagged PWorkArea FilePath
 type ProjArea = Tagged PProjArea FilePath
-
+type TrajPath = Tagged PTrajPath FilePath
 
 -- The info that a tool has access to
 data ToolInfo = ToolInfo {
