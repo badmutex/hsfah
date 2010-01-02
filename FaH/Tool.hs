@@ -7,6 +7,7 @@
 module FaH.Tool where
 
 import FaH.Types
+import FaH.WorkArea
 
 import Data.Tagged
 import Control.Applicative ((<$>))
@@ -40,3 +41,11 @@ findTrajPath' pa r c = let r'  = printf "RUN%d" (unTagged r)
 
 findTrajPath :: ToolInfo -> TrajPath
 findTrajPath ti = findTrajPath' (projectArea ti) (run ti) (clone ti)
+
+
+createToolInfo :: RunType -> CloneType -> ProjArea -> WorkArea -> ToolInfo
+createToolInfo r c projloc wa = ToolInfo { run         = Tagged r
+                                         , clone       = Tagged c
+                                         , workarea    = wa
+                                         , projectArea = projloc
+                                         }

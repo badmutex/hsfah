@@ -79,5 +79,5 @@ type DBTool = DB.IConnection c => c -> Tool
 data ProjectParameters = ProjectParameters {
       runs :: RunType
     , clones :: CloneType
-    , location :: FilePath
+    , location :: ProjArea
     }

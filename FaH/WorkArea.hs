@@ -2,7 +2,9 @@
 module FaH.WorkArea where
 
 import FaH.Constants (_workarea_name,_default_workarea_location)
+import FaH.Types (WorkArea)
 
+import Data.Tagged
 import Control.Applicative ((<$>))
 import Control.Monad
 import System.FilePath
@@ -10,7 +12,7 @@ import System.Random
 
 
 -- | Generate a path to the workarea
-mkWorkArea :: FilePath -> String -> IO FilePath
+mkWorkArea :: FilePath -> String -> IO WorkArea
 mkWorkArea root n = do
   g <- getStdGen
   let (g0,g1) = split g
@@ -24,8 +26,8 @@ mkWorkArea root n = do
 
   setStdGen g3
 
-  return name
+  return $ Tagged name
 
 
-defaultWorkAreak :: IO String
+defaultWorkAreak :: IO WorkArea
 defaultWorkAreak = mkWorkArea _default_workarea_location _workarea_name
