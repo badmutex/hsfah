@@ -7,10 +7,8 @@ import FaH.Types
 import FaH.WorkArea
 
 
-doWork :: ProjectParameters -> [Tool] -> IO [Status]
-doWork params ts = do
-  wa <- defaultWorkAreak
-  apply ts $ mkToolInfos params wa
+doWork :: ProjectParameters -> [Tool] -> IO WorkArea ->IO [Status]
+doWork params ts genWa = apply ts . mkToolInfos params =<< genWa
 
 
 mkToolInfos :: ProjectParameters -> WorkArea -> [ToolInfo]
