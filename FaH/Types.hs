@@ -14,6 +14,12 @@ import qualified  Database.HDBC as DB
 data PRun
 data PClone
 
+_db_structure_id_type = "integer"
+_db_run_type = "integer"
+_db_clone_type = "integer"
+_db_frame_type = "integer"
+_db_rep_type = "integer"
+
 type Run = Tagged PRun Integer
 type Clone = Tagged PClone Integer
 
@@ -26,7 +32,7 @@ data Project = Project {
 data Trajectory = Trajectory {
       run            :: Run
     , clone          :: Clone
-    , location :: FilePath
+    , _location :: FilePath
     } deriving (Eq, Show)
 
 
@@ -41,3 +47,11 @@ class Apply a b c where apply :: a -> b -> c
 
 type DBTool = DB.IConnection c => c -> Tool
 
+
+
+data ProjectParameters = ProjectParameters {
+      runs :: Run
+    , clones :: Clone
+    , gens :: Integer
+    , location :: FilePath
+    }
