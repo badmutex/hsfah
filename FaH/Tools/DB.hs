@@ -15,10 +15,18 @@ module FaH.Tools.DB where
 import FaH.Types
 
 import Control.Applicative ((<$>))
+import Control.Monad
+import Control.Monad.ST
 import Data.List (intercalate)
-import qualified  Database.HDBC as DB
-import Database.HDBC.MySQL
+import Data.STRef
+import Data.Tagged
 import Text.Printf
+
+import qualified  Database.HDBC as DB (run,clone)
+import Database.HDBC hiding (run, clone)
+
+import Database.HDBC.MySQL
+
 
 
 newtype TableCreate = TableCreate String deriving Show -- ^ passed to HDBC to create the table
@@ -30,7 +38,8 @@ newtype TableDesc   = TableDesc String   deriving Show -- ^ 'create table <name>
 
 data SqlOrd = Max | Min deriving Show
 
--- column names for the tables.
+-- names for the database stuff.
+_db_table_master       = "master"
 _db_table_master_run   = "run"
 _db_table_master_clone = "clone"
 _db_table_master_frame = "frame"
@@ -65,23 +74,45 @@ newTable (ColDesc col) =
     in flip tableCreate (TableDesc desc)
 
 
-ordColumn :: DB.IConnection c => TableName -> ColName -> c -> SqlOrd -> IO DB.SqlValue
-ordColumn (TableName tn) (ColName cn) conn ord =
+ordColumn :: IConnection c => c -> TableName -> ColName -> SqlOrd -> IO SqlValue
+ordColumn conn (TableName tn) (ColName cn) ord =
     let q = printf "select %s(%s) from %s" (show ord) cn tn
-    in do head . head <$>  DB.quickQuery conn q []
+    in do head . head <$>  quickQuery' conn q []
 
--- insertIntoMaster :: DB.IConnection c => [(Run, Column, Frame)] -> c -> IO ()
--- insertIntoMaster vals c = do
---   max
+nextStructId :: IConnection c => c -> IO Integer
+nextStructId c =  (+1) . fromSql <$> ordColumn c (TableName _db_table_master) (ColName _db_struct_id) Max
+
+genInsertVals :: [(Run, Clone, Frame)] -> Integer -> [[SqlValue]]
+genInsertVals vals i = zipWith to vals [i..]
+    where to (r,c,f) i = let r' = toSql . unTagged $ r
+                             c' = toSql . unTagged $ c
+                             f' = toSql . unTagged $ f
+                             i' = toSql i
+                         in [r',c',f', i']
+
+
+
+insertIntoMaster :: IConnection c => [(Run, Clone, Frame)] -> c -> IO ()
+insertIntoMaster vals c =
+    let s = printf
+            "insert into %s (%s,%s,%s,%s) values (?,?,?,?)"
+            _db_table_master _db_table_master_run _db_table_master_clone _db_table_master_frame _db_struct_id
+            :: String
+        vs = genInsertVals vals
+    in do
+      next_id <- nextStructId c
+      ps      <- prepare c s
+      executeMany ps (vs next_id)
+
 
 
 -- Creates the tables, does not insert anything
-doCreateTables :: DB.IConnection c => [TableCreate] -> c -> IO ()
+doCreateTables :: IConnection c => [TableCreate] -> c -> IO ()
 doCreateTables ts c = do
-  mapM_ (\(TableCreate s) -> DB.quickQuery c s []) ts
-  DB.commit c
+  mapM_ (\(TableCreate s) -> quickQuery' c s []) ts
+  commit c
 
-doAddTable :: DB.IConnection c => TableCreate -> c -> IO ()
+doAddTable :: IConnection c => TableCreate -> c -> IO ()
 doAddTable t = doCreateTables [t]
 
 
@@ -100,6 +131,8 @@ test = do
        }
 
   let ts = [uncurry tableCreate _master_table, newTable (ColDesc "bar float") (TableName "foo")]
-  doCreateTables ts c
+      vs = map (\i -> (Tagged i, Tagged i, Tagged i)) [1..9]
+  -- doCreateTables [ts !! 0]  c
+  insertIntoMaster vs c
 
-  DB.disconnect c
+  disconnect c
