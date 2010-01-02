@@ -23,7 +23,7 @@ data PStructId
 
 -- if the types need to be changed in the database, 
 -- this is the place to do so
-_db_structure_id_type = "integer"
+_db_structure_id_type = "text"
 _db_run_type          = "integer"
 _db_clone_type        = "integer"
 _db_frame_type        = "integer"
@@ -37,7 +37,7 @@ type Frame    = Tagged PFrame Integer
 type WorkArea = Tagged PWorkArea FilePath
 type ProjArea = Tagged PProjArea FilePath
 type TrajPath = Tagged PTrajPath FilePath
-type StructId = Tagged PStructId Integer
+type StructId = Tagged PStructId String
 
 instance Convertible b c => Convertible (Tagged a b) c where
     safeConvert = safeConvert . unTagged

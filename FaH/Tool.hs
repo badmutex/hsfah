@@ -40,3 +40,7 @@ findTrajPath' pa r c = let r'  = printf "RUN%d" (unTagged r)
 
 findTrajPath :: ToolInfo -> TrajPath
 findTrajPath ti = findTrajPath' (projectArea ti) (run ti) (clone ti)
+
+
+uncurry3 :: (a -> b -> c -> d) -> (a,b,c) -> d
+uncurry3 f (a,b,c) = f a b c

@@ -14,6 +14,7 @@
 
 module FaH.DB where
 
+import FaH.Tool
 import FaH.Types
 
 import Control.Applicative ((<$>))
@@ -51,11 +52,18 @@ _master_table =
     let run   = printf "%s %s unsigned not null" _db_table_master_run   _db_run_type
         clone = printf "%s %s unsigned not null" _db_table_master_clone _db_clone_type
         frame = printf "%s %s unsigned not null" _db_table_master_frame _db_frame_type
-        id    = printf "%s %s unsigned not null" _db_struct_id          _db_structure_id_type
+        id    = printf "%s %s"                   _db_struct_id          _db_structure_id_type
         cols  = (intercalate ", " [run, clone, frame, id])
         desc  = printf "%s, primary key ( %s, %s, %s )" cols _db_table_master_run _db_table_master_clone _db_table_master_frame
     in (TableName "master", TableDesc desc)
 
+
+mkStructId :: Run -> Clone -> Frame -> StructId
+mkStructId r c f = Tagged $
+                   printf "r%dc%df%d"
+                   (unTagged r)
+                   (unTagged c)
+                   (unTagged f)
 
 
 tableCreate :: TableName -> TableDesc -> TableCreate
@@ -87,19 +95,10 @@ countRows conn (TableName n) =
     let q = printf "select count(*) from %s" n
     in fromSql . head . head <$> quickQuery' conn q []
 
--- | Returns the next (incrementing) structure id number for the master table
-nextStructId :: IConnection c => c -> IO StructId
-nextStructId c =
-    let m = _db_table_master
-    in do
-      rs <- countRows c (TableName m)
-      if rs > 0
-          then Tagged . (+1) . fromSql <$> ordColumn c (TableName _db_table_master) (ColName _db_struct_id) Max
-          else return . Tagged $ 0
 
 
-genInsertVals :: [(Run, Clone, Frame)] -> StructId -> [[SqlValue]]
-genInsertVals vals i = zipWith to vals [(unTagged i)..]
+masterInsertVals :: [(Run, Clone, Frame)] -> [[SqlValue]]
+masterInsertVals vals = map (\v -> to v (uncurry3 mkStructId v)) vals
     where to (r,c,f) i = let r' = toSql r
                              c' = toSql c
                              f' = toSql f
@@ -118,11 +117,11 @@ insertIntoMaster vals c =
             _db_table_master_frame
             _db_struct_id
             :: String
-        vs = genInsertVals vals
+        vs = masterInsertVals vals
     in do
-      next_id <- nextStructId c
       ps      <- prepare c s
-      executeMany ps (vs next_id)
+      executeMany ps vs
+
 
 
 
@@ -151,9 +150,9 @@ test = handleSqlError $ do
        }
 
   let ts = [uncurry tableCreate _master_table, newTable (ColDesc "bar float") (TableName "foo")]
-      vs = map (\i -> (Tagged i, Tagged i, Tagged i)) [50..59]
-  -- doAddTable (ts !! 0) c
-  -- printf "Table %d created\n" (0::Int)
+      vs = map (\i -> (Tagged i, Tagged i, Tagged i)) [0..10000]
+  doAddTable (ts !! 0) c
+  printf "Table %d created\n" (0::Int)
   -- doAddTable (ts !! 1) c
   -- printf "Table %d created\n" (1::Int)
   rs <- countRows c (TableName "master")
