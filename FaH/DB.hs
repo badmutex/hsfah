@@ -68,8 +68,8 @@ newTable (ColDesc col) =
 
 
 -- | Select the min or max value from a column
-ordColumn :: IConnection c => c -> TableName -> ColName -> SqlOrd -> IO SqlValue
-ordColumn conn (TableName tn) (ColName cn) ord =
+columnMinMax :: IConnection c => c -> TableName -> ColName -> SqlOrd -> IO SqlValue
+columnMinMax conn (TableName tn) (ColName cn) ord =
     let q = printf "select %s(%s) from %s" (show ord) cn tn
     in do head . head <$>  quickQuery' conn q []
 
@@ -161,14 +161,14 @@ test = handleSqlError $ do
       vs = map (\i -> (Tagged i, Tagged i, Tagged i)) [0..10000]
 
       structs :: [(Run, Clone, Frame)]
-      structs = map (\i -> (Tagged i, Tagged i, Tagged i)) [1..10]
+      structs = map (\i -> (Tagged . fromIntegral $ i, Tagged . fromIntegral $ i, Tagged . fromIntegral $ i)) [1..10]
 
 
 
   -- doAddTable (ts !! 0) c
   -- printf "Table %d created\n" (0::Int)
   -- printf "SQL: %s" (show $ ts !! 1)
-  -- doAddTable (ts !! 1) c
+  doAddTable (ts !! 1) c
   -- printf "Table %d created\n" (1::Int)
   -- rs <- countRows c (TableName "master")
   -- printf "Master has %d rows\n" rs

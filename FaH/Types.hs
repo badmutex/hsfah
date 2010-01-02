@@ -31,8 +31,8 @@ _db_rep_type          = "integer unsigned not null auto_increment"
 
 -- I shouldn't be able to treat runs and clones as the same.
 -- Same goes for the workarea/project paths
-type Run      = Tagged PRun Integer
-type Clone    = Tagged PClone Integer
+type Run      = Tagged PRun Int
+type Clone    = Tagged PClone Int
 type Frame    = Tagged PFrame Integer
 type WorkArea = Tagged PWorkArea FilePath
 type ProjArea = Tagged PProjArea FilePath
@@ -89,8 +89,8 @@ type DBTool = DB.IConnection c => c -> Tool
 
 
 data ProjectParameters = ProjectParameters {
-      runs :: Run
-    , clones :: Clone
+      runs :: Int
+    , clones :: Int
     , gens :: Integer
     , location :: FilePath
     }
