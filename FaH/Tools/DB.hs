@@ -30,14 +30,20 @@ newtype TableDesc   = TableDesc String   deriving Show -- ^ 'create table <name>
 
 data SqlOrd = Max | Min deriving Show
 
+-- column names for the tables.
+_db_table_master_run   = "run"
+_db_table_master_clone = "clone"
+_db_table_master_frame = "frame"
+_db_struct_id          = "structure_id"
+_db_rep                = "rep"
+
 _master_table =
-    let pf    = printf
-        run   = pf "run %s unsigned not null"                          _db_run_type
-        clone = pf "clone %s unsigned not null"                        _db_clone_type
-        frame = pf "frame %s unsigned not null"                        _db_frame_type
-        id    = pf "structure_id %s unsigned not null"  _db_structure_id_type
+    let run   = printf "%s %s unsigned not null" _db_table_master_run   _db_run_type
+        clone = printf "%s %s unsigned not null" _db_table_master_clone _db_clone_type
+        frame = printf "%s %s unsigned not null" _db_table_master_frame _db_frame_type
+        id    = printf "%s %s unsigned not null" _db_struct_id          _db_structure_id_type
         cols  = (intercalate ", " [run, clone, frame, id])
-        desc  = pf "%s, primary key ( run,clone,frame )" cols
+        desc  = printf "%s, primary key ( %s, %s, %s )" cols _db_table_master_run _db_table_master_clone _db_table_master_frame
     in (TableName "master", TableDesc desc)
 
 
@@ -50,10 +56,11 @@ tableCreate (TableName name) (TableDesc desc) =
 
 newTable :: ColDesc -> TableName -> TableCreate
 newTable (ColDesc col) =
-    let master  = printf "structure_id %s unsigned not null"       _db_structure_id_type
-        rep     = printf "rep %s unsigned not null auto_increment" _db_rep_type
-        foreign = printf "foreign key (%s) references master(%s)" "structure_id" "structure_id"
-        primary = printf "primary key (%s)" "structure_id, rep"
+    let master  = printf "%s %s unsigned not null"                _db_struct_id _db_structure_id_type
+        rep     = printf "%s %s unsigned not null auto_increment" _db_rep       _db_rep_type
+        foreign = printf "foreign key (%s) references master(%s)" _db_struct_id _db_struct_id
+        keys    = printf "%s, %s"                                 _db_struct_id _db_rep
+        primary = printf "primary key (%s)"                       (keys :: String)
         desc = intercalate ", " [rep, master, col, foreign, primary]
     in flip tableCreate (TableDesc desc)
 
