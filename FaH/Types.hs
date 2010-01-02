@@ -17,6 +17,7 @@ data PFrame
 data PProjArea
 data PWorkArea
 data PTrajPath
+data PStructId
 
 -- if the types need to be changed in the database, 
 -- this is the place to do so
@@ -34,6 +35,7 @@ type Frame    = Tagged PFrame Integer
 type WorkArea = Tagged PWorkArea FilePath
 type ProjArea = Tagged PProjArea FilePath
 type TrajPath = Tagged PTrajPath FilePath
+type StructId = Tagged PStructId Integer
 
 -- The info that a tool has access to
 data ToolInfo = ToolInfo {

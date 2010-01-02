@@ -74,16 +74,31 @@ newTable (ColDesc col) =
     in flip tableCreate (TableDesc desc)
 
 
+-- | Select the min or max value from a column
 ordColumn :: IConnection c => c -> TableName -> ColName -> SqlOrd -> IO SqlValue
 ordColumn conn (TableName tn) (ColName cn) ord =
     let q = printf "select %s(%s) from %s" (show ord) cn tn
     in do head . head <$>  quickQuery' conn q []
 
-nextStructId :: IConnection c => c -> IO Integer
-nextStructId c =  (+1) . fromSql <$> ordColumn c (TableName _db_table_master) (ColName _db_struct_id) Max
+-- | Count the number of rows in a table
+countRows :: IConnection c => c -> TableName -> IO Integer
+countRows conn (TableName n) =
+    let q = printf "select count(*) from %s" n
+    in fromSql . head . head <$> quickQuery' conn q []
 
-genInsertVals :: [(Run, Clone, Frame)] -> Integer -> [[SqlValue]]
-genInsertVals vals i = zipWith to vals [i..]
+-- | Returns the next (incrementing) structure id number for the master table
+nextStructId :: IConnection c => c -> IO StructId
+nextStructId c =
+    let m = _db_table_master
+    in do
+      rs <- countRows c (TableName m)
+      if rs > 0
+          then Tagged . (+1) . fromSql <$> ordColumn c (TableName _db_table_master) (ColName _db_struct_id) Max
+          else return . Tagged $ 0
+
+
+genInsertVals :: [(Run, Clone, Frame)] -> StructId -> [[SqlValue]]
+genInsertVals vals i = zipWith to vals [(unTagged i)..]
     where to (r,c,f) i = let r' = toSql . unTagged $ r
                              c' = toSql . unTagged $ c
                              f' = toSql . unTagged $ f
@@ -96,7 +111,11 @@ insertIntoMaster :: IConnection c => [(Run, Clone, Frame)] -> c -> IO ()
 insertIntoMaster vals c =
     let s = printf
             "insert into %s (%s,%s,%s,%s) values (?,?,?,?)"
-            _db_table_master _db_table_master_run _db_table_master_clone _db_table_master_frame _db_struct_id
+            _db_table_master
+            _db_table_master_run
+            _db_table_master_clone
+            _db_table_master_frame
+            _db_struct_id
             :: String
         vs = genInsertVals vals
     in do
@@ -109,7 +128,9 @@ insertIntoMaster vals c =
 -- Creates the tables, does not insert anything
 doCreateTables :: IConnection c => [TableCreate] -> c -> IO ()
 doCreateTables ts c = do
-  mapM_ (\(TableCreate s) -> quickQuery' c s []) ts
+  -- this needs to be lazy (quickQuery instead of quickQuery') otherwise we get error 2053:
+  -- attempting to read a row which there is no result set associated with the statement
+  mapM_ (\(TableCreate s) -> quickQuery c s []) ts
   commit c
 
 doAddTable :: IConnection c => TableCreate -> c -> IO ()
@@ -120,9 +141,7 @@ doAddTable t = doCreateTables [t]
 
 
 
-
-
-test = do
+test = handleSqlError $ do
   c <- connectMySQL defaultMySQLConnectInfo {
          mysqlHost = "localhost"
        , mysqlUser = "badi"
@@ -131,8 +150,14 @@ test = do
        }
 
   let ts = [uncurry tableCreate _master_table, newTable (ColDesc "bar float") (TableName "foo")]
-      vs = map (\i -> (Tagged i, Tagged i, Tagged i)) [1..9]
-  -- doCreateTables [ts !! 0]  c
+      vs = map (\i -> (Tagged i, Tagged i, Tagged i)) [50..59]
+  -- doAddTable (ts !! 0) c
+  -- printf "Table %d created\n" (0::Int)
+  -- doAddTable (ts !! 1) c
+  -- printf "Table %d created\n" (1::Int)
+  rs <- countRows c (TableName "master")
+  printf "Master has %d rows\n" rs
   insertIntoMaster vs c
-
+  rs' <- countRows c (TableName "master")
+  printf "Master has %d rows\n" rs'
   disconnect c
