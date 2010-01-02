@@ -10,7 +10,7 @@
 --
 --  Tools can further specify a column to associate with a frame, ie RMSD, or contacts, etc.
 
-module FaH.Tools.DB where
+module FaH.DB where
 
 import FaH.Types
 
