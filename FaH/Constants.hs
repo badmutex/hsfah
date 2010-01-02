@@ -29,7 +29,7 @@ _db_struct_id          = "structure_id"
 _db_rep                = "rep"
 
 
-
+-- creation info for the master table
 _master_table =
     let run   = printf "%s %s" _db_table_master_run   _db_run_type
         clone = printf "%s %s" _db_table_master_clone _db_clone_type
@@ -38,3 +38,7 @@ _master_table =
         cols  = (intercalate ", " [run, clone, frame, id])
         desc  = printf "%s, primary key ( %s, %s, %s )" cols _db_table_master_run _db_table_master_clone _db_table_master_frame
     in (TableName "master", TableDesc desc)
+
+
+_workarea_name = "_hsfah"
+_default_workarea_location = "/tmp"
