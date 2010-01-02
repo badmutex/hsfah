@@ -21,13 +21,6 @@ data PWorkArea
 data PTrajPath
 data PStructId
 
--- if the types need to be changed in the database, 
--- this is the place to do so
-_db_structure_id_type = "varchar(200)"
-_db_run_type          = "integer unsigned not null"
-_db_clone_type        = "integer unsigned not null"
-_db_frame_type        = "integer unsigned not null"
-_db_rep_type          = "integer unsigned not null auto_increment"
 
 -- in case these need to be change, alias them here
 type RunType = Int
@@ -55,15 +48,6 @@ newtype TableDesc   = TableDesc String   deriving Show -- ^ 'create table <name>
 
 -- | Used to choose either the sql 'MAX' or 'MIN' function in 'SELECT'
 data SqlOrd = Max | Min deriving Show
-
--- names for the database stuff.
--- ideally these would be strongly typed, but we're just hacking now.
-_db_table_master       = "master"
-_db_table_master_run   = "run"
-_db_table_master_clone = "clone"
-_db_table_master_frame = "frame"
-_db_struct_id          = "structure_id"
-_db_rep                = "rep"
 
 
 instance Convertible b c => Convertible (Tagged a b) c where

@@ -14,32 +14,21 @@
 
 module FaH.DB where
 
+import FaH.Constants
 import FaH.Types
 import FaH.Util
 
 import Control.Applicative ((<$>))
-import Data.Convertible
+import Data.Convertible (Convertible)
 import Data.List (intercalate)
-import Data.STRef
 import Data.Tagged
-import Text.Printf
+import Text.Printf (printf)
 
 import qualified  Database.HDBC as DB (run,clone)
 import Database.HDBC hiding (run, clone)
 
 import Database.HDBC.MySQL
 
-
-
-
-_master_table =
-    let run   = printf "%s %s" _db_table_master_run   _db_run_type
-        clone = printf "%s %s" _db_table_master_clone _db_clone_type
-        frame = printf "%s %s" _db_table_master_frame _db_frame_type
-        id    = printf "%s %s" _db_struct_id          _db_structure_id_type
-        cols  = (intercalate ", " [run, clone, frame, id])
-        desc  = printf "%s, primary key ( %s, %s, %s )" cols _db_table_master_run _db_table_master_clone _db_table_master_frame
-    in (TableName "master", TableDesc desc)
 
 
 mkStructId :: Run -> Clone -> Frame -> StructId
@@ -103,7 +92,7 @@ insertIntoMaster vals c =
             :: String
         vs = masterInsertVals vals
     in do
-      ps      <- prepare c s
+      ps <- prepare c s
       executeMany ps vs
 
 
