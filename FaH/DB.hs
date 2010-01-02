@@ -1,4 +1,6 @@
-
+{-# LANGUAGE
+  FlexibleContexts
+  #-}
 
 -- | (run, clone, frame) identifies a single structure.
 --  In a perfect world this is all we would need, but in many cases we need
@@ -15,8 +17,7 @@ module FaH.DB where
 import FaH.Types
 
 import Control.Applicative ((<$>))
-import Control.Monad
-import Control.Monad.ST
+import Data.Convertible
 import Data.List (intercalate)
 import Data.STRef
 import Data.Tagged
@@ -99,9 +100,9 @@ nextStructId c =
 
 genInsertVals :: [(Run, Clone, Frame)] -> StructId -> [[SqlValue]]
 genInsertVals vals i = zipWith to vals [(unTagged i)..]
-    where to (r,c,f) i = let r' = toSql . unTagged $ r
-                             c' = toSql . unTagged $ c
-                             f' = toSql . unTagged $ f
+    where to (r,c,f) i = let r' = toSql r
+                             c' = toSql c
+                             f' = toSql f
                              i' = toSql i
                          in [r',c',f', i']
 

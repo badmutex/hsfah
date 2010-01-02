@@ -1,11 +1,13 @@
 {-# LANGUAGE
   EmptyDataDecls
+  , FlexibleInstances
   , MultiParamTypeClasses
   , Rank2Types
   #-}
 
 module FaH.Types where
 
+import Data.Convertible
 import Data.Tagged
 
 import qualified  Database.HDBC as DB
@@ -36,6 +38,9 @@ type WorkArea = Tagged PWorkArea FilePath
 type ProjArea = Tagged PProjArea FilePath
 type TrajPath = Tagged PTrajPath FilePath
 type StructId = Tagged PStructId Integer
+
+instance Convertible b c => Convertible (Tagged a b) c where
+    safeConvert = safeConvert . unTagged
 
 -- The info that a tool has access to
 data ToolInfo = ToolInfo {
