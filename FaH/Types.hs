@@ -39,6 +39,29 @@ type ProjArea = Tagged PProjArea FilePath
 type TrajPath = Tagged PTrajPath FilePath
 type StructId = Tagged PStructId String
 
+
+-- these are used to control the database interactions
+newtype TableCreate = TableCreate String deriving Show -- ^ passed to HDBC to create the table
+newtype DBName      = DBName String      deriving Show
+newtype TableName   = TableName String   deriving Show
+newtype ColName     = ColName String     deriving Show
+newtype ColDesc     = ColDesc String     deriving Show -- ^ used in the creation of a table
+newtype ColComment  = ColComment String  deriving Show
+newtype TableDesc   = TableDesc String   deriving Show -- ^ 'create table <name> ( <desc> )'"
+
+-- | Used to choose either the sql 'MAX' or 'MIN' function in 'SELECT'
+data SqlOrd = Max | Min deriving Show
+
+-- names for the database stuff.
+-- ideally these would be strongly typed, but we're just hacking now.
+_db_table_master       = "master"
+_db_table_master_run   = "run"
+_db_table_master_clone = "clone"
+_db_table_master_frame = "frame"
+_db_struct_id          = "structure_id"
+_db_rep                = "rep"
+
+
 instance Convertible b c => Convertible (Tagged a b) c where
     safeConvert = safeConvert . unTagged
 
