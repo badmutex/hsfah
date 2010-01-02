@@ -49,10 +49,10 @@ _db_struct_id          = "structure_id"
 _db_rep                = "rep"
 
 _master_table =
-    let run   = printf "%s %s unsigned not null" _db_table_master_run   _db_run_type
-        clone = printf "%s %s unsigned not null" _db_table_master_clone _db_clone_type
-        frame = printf "%s %s unsigned not null" _db_table_master_frame _db_frame_type
-        id    = printf "%s %s"                   _db_struct_id          _db_structure_id_type
+    let run   = printf "%s %s" _db_table_master_run   _db_run_type
+        clone = printf "%s %s" _db_table_master_clone _db_clone_type
+        frame = printf "%s %s" _db_table_master_frame _db_frame_type
+        id    = printf "%s %s" _db_struct_id          _db_structure_id_type
         cols  = (intercalate ", " [run, clone, frame, id])
         desc  = printf "%s, primary key ( %s, %s, %s )" cols _db_table_master_run _db_table_master_clone _db_table_master_frame
     in (TableName "master", TableDesc desc)
@@ -74,8 +74,8 @@ tableCreate (TableName name) (TableDesc desc) =
 
 newTable :: ColDesc -> TableName -> TableCreate
 newTable (ColDesc col) =
-    let master  = printf "%s %s unsigned not null"                _db_struct_id _db_structure_id_type
-        rep     = printf "%s %s unsigned not null auto_increment" _db_rep       _db_rep_type
+    let master  = printf "%s %s"                                  _db_struct_id _db_structure_id_type
+        rep     = printf "%s %s"                                  _db_rep       _db_rep_type
         foreign = printf "foreign key (%s) references master(%s)" _db_struct_id _db_struct_id
         keys    = printf "%s, %s"                                 _db_struct_id _db_rep
         primary = printf "primary key (%s)"                       (keys :: String)
@@ -124,7 +124,6 @@ insertIntoMaster vals c =
 
 
 
-
 -- Creates the tables, does not insert anything
 doCreateTables :: IConnection c => [TableCreate] -> c -> IO ()
 doCreateTables ts c = do
@@ -151,13 +150,23 @@ test = handleSqlError $ do
 
   let ts = [uncurry tableCreate _master_table, newTable (ColDesc "bar float") (TableName "foo")]
       vs = map (\i -> (Tagged i, Tagged i, Tagged i)) [0..10000]
-  doAddTable (ts !! 0) c
-  printf "Table %d created\n" (0::Int)
+
+      structs :: [(Run, Clone, Frame)]
+      structs = map (\i -> (Tagged i, Tagged i, Tagged i)) [1..10]
+
+
+
+  -- doAddTable (ts !! 0) c
+  -- printf "Table %d created\n" (0::Int)
+  -- printf "SQL: %s" (show $ ts !! 1)
   -- doAddTable (ts !! 1) c
   -- printf "Table %d created\n" (1::Int)
-  rs <- countRows c (TableName "master")
-  printf "Master has %d rows\n" rs
-  insertIntoMaster vs c
-  rs' <- countRows c (TableName "master")
-  printf "Master has %d rows\n" rs'
+  -- rs <- countRows c (TableName "master")
+  -- printf "Master has %d rows\n" rs
+  -- insertIntoMaster vs c
+  -- rs' <- countRows c (TableName "master")
+  -- printf "Master has %d rows\n" rs'
+
+  -- insert c (TableName "foo") (ColName "bar") structs ([1..10] :: [Integer])
+
   disconnect c

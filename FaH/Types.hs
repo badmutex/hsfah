@@ -23,11 +23,11 @@ data PStructId
 
 -- if the types need to be changed in the database, 
 -- this is the place to do so
-_db_structure_id_type = "text"
-_db_run_type          = "integer"
-_db_clone_type        = "integer"
-_db_frame_type        = "integer"
-_db_rep_type          = "integer"
+_db_structure_id_type = "varchar(200)"
+_db_run_type          = "integer unsigned not null"
+_db_clone_type        = "integer unsigned not null"
+_db_frame_type        = "integer unsigned not null"
+_db_rep_type          = "integer unsigned not null auto_increment"
 
 -- I shouldn't be able to treat runs and clones as the same.
 -- Same goes for the workarea/project paths
