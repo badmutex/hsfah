@@ -28,14 +28,16 @@ newtype ColName     = ColName String     deriving Show
 newtype ColDesc     = ColDesc String     deriving Show -- ^ used in the creation of a table
 newtype TableDesc   = TableDesc String   deriving Show -- ^ 'create table <name> ( <desc> )'"
 
+data SqlOrd = Max | Min deriving Show
+
 _master_table =
     let pf    = printf
-        id    = pf "structure_id %s unsigned not null auto_increment"  _db_structure_id_type
         run   = pf "run %s unsigned not null"                          _db_run_type
         clone = pf "clone %s unsigned not null"                        _db_clone_type
         frame = pf "frame %s unsigned not null"                        _db_frame_type
-        cols  = (intercalate ", " [id, run, clone, frame])
-        desc  = pf "%s, primary key ( structure_id )" cols
+        id    = pf "structure_id %s unsigned not null"  _db_structure_id_type
+        cols  = (intercalate ", " [run, clone, frame, id])
+        desc  = pf "%s, primary key ( run,clone,frame )" cols
     in (TableName "master", TableDesc desc)
 
 
@@ -56,6 +58,15 @@ newTable (ColDesc col) =
     in flip tableCreate (TableDesc desc)
 
 
+ordColumn :: DB.IConnection c => TableName -> ColName -> c -> SqlOrd -> IO DB.SqlValue
+ordColumn (TableName tn) (ColName cn) conn ord =
+    let q = printf "select %s(%s) from %s" (show ord) cn tn
+    in do head . head <$>  DB.quickQuery conn q []
+
+-- insertIntoMaster :: DB.IConnection c => [(Run, Column, Frame)] -> c -> IO ()
+-- insertIntoMaster vals c = do
+--   max
+
 
 -- Creates the tables, does not insert anything
 doCreateTables :: DB.IConnection c => [TableCreate] -> c -> IO ()
@@ -65,6 +76,11 @@ doCreateTables ts c = do
 
 doAddTable :: DB.IConnection c => TableCreate -> c -> IO ()
 doAddTable t = doCreateTables [t]
+
+
+
+
+
 
 
 

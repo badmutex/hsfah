@@ -13,6 +13,7 @@ import qualified  Database.HDBC as DB
 
 data PRun
 data PClone
+data PFrame
 data PProjArea
 data PWorkArea
 data PTrajPath
@@ -29,6 +30,7 @@ _db_rep_type          = "integer"
 -- Same goes for the workarea/project paths
 type Run      = Tagged PRun Integer
 type Clone    = Tagged PClone Integer
+type Frame    = Tagged PFrame Integer
 type WorkArea = Tagged PWorkArea FilePath
 type ProjArea = Tagged PProjArea FilePath
 type TrajPath = Tagged PTrajPath FilePath
