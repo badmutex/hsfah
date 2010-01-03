@@ -29,8 +29,5 @@ test = let ti = mkToolInfo 808 1 (Tagged "/home/badi/Research/fah/test/data/PROJ
 
        in doWork pps [tool] defaultWorkArea
 
-tool :: Tool
-tool ti = do res <- process ti
-             print $ length `fmap` res
-             return $ Right ()
+
 ti ps = defaultWorkArea >>= \wa -> return $ toolInfos ps wa

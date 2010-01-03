@@ -146,18 +146,18 @@ test = handleSqlError $ do
        , mysqlUnixSocket = "/var/run/mysqld/mysqld.sock"
        }
 
-  let ts = [uncurry tableCreate _master_table, newTable (ColDesc "bar float") (TableName "foo")]
+  let ts = [uncurry tableCreate _master_table, newTable (ColDesc "bang float") (TableName "baz")]
       vs = map (\i -> (Tagged i, Tagged i, Tagged i)) [0..10000]
 
       structs :: [(Run, Clone, Frame)]
       structs = map (\i -> (Tagged . fromIntegral $ i, Tagged . fromIntegral $ i, Tagged . fromIntegral $ i)) [1..10]
 
 
-
+  doCreateTables ts c
   -- doAddTable (ts !! 0) c
   -- printf "Table %d created\n" (0::Int)
   -- printf "SQL: %s" (show $ ts !! 1)
-  doAddTable (ts !! 1) c
+  -- doAddTable (ts !! 1) c
   -- printf "Table %d created\n" (1::Int)
   -- rs <- countRows c (TableName "master")
   -- printf "Master has %d rows\n" rs
@@ -165,6 +165,6 @@ test = handleSqlError $ do
   -- rs' <- countRows c (TableName "master")
   -- printf "Master has %d rows\n" rs'
 
-  insert c (TableName "foo") (ColName "bar") structs ([1..10] :: [Integer])
+  -- insert c (TableName "foo") (ColName "bar") structs ([1..10] :: [Integer])
 
   disconnect c
