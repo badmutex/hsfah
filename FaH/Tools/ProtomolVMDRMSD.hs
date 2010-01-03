@@ -8,6 +8,7 @@ import FaH.Archive
 import FaH.Tool
 import FaH.Types
 
+
 import Codec.Compression.BZip
 import Control.Applicative ((<$>))
 import Data.Tagged
@@ -90,7 +91,7 @@ data CmdParams = CmdParams {
     }
 
 cmd :: CmdParams -> Cmd
-cmd ps = let cmd = printf "%s -dispdev text -psf %s -dcd %s -f %s < %s"
+cmd ps = let cmd = printf "%s -dispdev text -psf %s -dcd %s -f %s < %s >/dev/null"
                         (vmd ps)       (psf ps)  (dcd ps) (ref ps) (script ps)
          in Cmd cmd
 
@@ -136,7 +137,6 @@ manage_tarball wa tarball =
     in do
       extract_dcd (dcd ps) tarball
       save_script (script ps) $ rmsdScript (outfile ps) atomselect
-      doLog . unTagged $ rmsdScript (script ps) atomselect
       runCmd $ cmd ps
       ret <- rmsdfile_parse (outfile ps)
 
@@ -150,9 +150,3 @@ process info = do
   tarballs <- get_tarballs $ trajPath info
   frames   <- concat <$> mapM (manage_tarball (workArea info)) tarballs
   return $ Right frames
-                               
-
-test = let ti = mkToolInfo 808 1 (Tagged "/home/badi/Research/fah/test/data/PROJ10001") (Tagged "/tmp")
-           tp = Tagged "/home/badi/Research/fah/test/data/PROJ10001/RUN808/CLONE1"
-           tb = unTagged tp </> "results-000.tar.bz2"
-       in process ti

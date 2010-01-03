@@ -7,6 +7,7 @@ import FaH.Types (WorkArea)
 import Data.Tagged
 import Control.Applicative ((<$>))
 import Control.Monad
+import System.Directory
 import System.FilePath
 import System.Random
 
@@ -26,8 +27,9 @@ mkWorkArea root n = do
 
   setStdGen g3
 
+  createDirectory name
   return $ Tagged name
 
 
-defaultWorkAreak :: IO WorkArea
-defaultWorkAreak = mkWorkArea _default_workarea_location _workarea_name
+defaultWorkArea :: IO WorkArea
+defaultWorkArea = mkWorkArea _default_workarea_location _workarea_name
