@@ -42,10 +42,15 @@ findTrajPath' pa r c = let r'  = printf "RUN%d" (unTagged r)
 findTrajPath :: ToolInfo -> TrajPath
 findTrajPath ti = findTrajPath' (projectArea ti) (run ti) (clone ti)
 
+toolInfos :: ProjectParameters -> WorkArea -> [ToolInfo]
+toolInfos ps wa = map f vs
+    where vs = [ (r,c) | r <- [0..runs ps], c <- [0..clones ps] ]
+          f (r,c) = mkToolInfo r c (location ps) wa
 
-createToolInfo :: RunType -> CloneType -> ProjArea -> WorkArea -> ToolInfo
-createToolInfo r c projloc wa = ToolInfo { run         = Tagged r
-                                         , clone       = Tagged c
-                                         , workarea    = wa
-                                         , projectArea = projloc
-                                         }
+
+mkToolInfo :: RunType -> CloneType -> ProjArea -> WorkArea -> ToolInfo
+mkToolInfo r c projloc wa = ToolInfo { run         = Tagged r
+                                     , clone       = Tagged c
+                                     , workarea    = wa
+                                     , projectArea = projloc
+                                     }

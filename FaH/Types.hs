@@ -10,7 +10,7 @@ module FaH.Types where
 import Data.Convertible
 import Data.Tagged
 
-import qualified  Database.HDBC as DB
+import Database.HDBC (IConnection)
 
 
 data PRun
@@ -72,7 +72,8 @@ type Tool = ToolInfo -> Action
 
 class Apply a b c where apply :: a -> b -> c
 
-type DBTool = DB.IConnection c => c -> Tool
+type DBTool = IConnection c => c -> Tool
+
 
 
 
