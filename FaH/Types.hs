@@ -1,5 +1,6 @@
 {-# LANGUAGE
   EmptyDataDecls
+  , FlexibleContexts
   , FlexibleInstances
   , MultiParamTypeClasses
   , Rank2Types
@@ -10,7 +11,7 @@ module FaH.Types where
 import Data.Convertible
 import Data.Tagged
 
-import Database.HDBC (IConnection)
+import Database.HDBC (IConnection, SqlValue)
 
 
 data PRun
@@ -74,7 +75,7 @@ class Apply a b c where apply :: a -> b -> c
 
 type DBTool = IConnection c => c -> Tool
 
-
+type Analyzer = Convertible v SqlValue => TrajPath -> [v]
 
 
 data ProjectParameters = ProjectParameters {
