@@ -60,7 +60,7 @@ data ToolInfo = ToolInfo {
     , clone       :: Clone
     , workArea    :: WorkArea
     , projectArea :: ProjArea
-    }
+    } deriving Show
 
 
 type ErrorMsg = String
@@ -82,4 +82,4 @@ data ProjectParameters = ProjectParameters {
       runs :: RunType
     , clones :: CloneType
     , location :: ProjArea
-    }
+    } deriving Show

@@ -21,8 +21,8 @@ test = let ti = mkToolInfo 808 1 (Tagged "/home/badi/Research/fah/test/data/PROJ
            tb = unTagged tp </> "results-000.tar.bz2"
 
            pps = ProjectParameters {
-                   runs = 1
-                 , clones = 1
+                   runs = 0
+                 , clones = 0
                  , location = Tagged "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001"
                  }
 
@@ -33,3 +33,4 @@ tool :: Tool
 tool ti = do res <- process ti
              print $ length `fmap` res
              return $ Right ()
+ti ps = defaultWorkArea >>= \wa -> return $ toolInfos ps wa
