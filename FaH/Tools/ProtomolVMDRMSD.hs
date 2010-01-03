@@ -47,7 +47,8 @@ psffile = "/home/badi/Research/fah/analysis/analysis/ww_exteq_nowater1.psf"
 dcdname = "ww.dcd"
 reffile = "/home/badi/Research/fah/analysis/analysis/ww_folded_min.pdb"
 
-atomselect = AS "alpha"
+-- atomselect = AS "alpha"
+atomselect = AS "alpha and (resid 6 to 11 or resid 16 to 21 or resid 25 to 28)"
 
 table_name = TableName "vmd_rmsd"
 col_name = ColName "rmsd"
@@ -143,6 +144,7 @@ manage_tarball wa tarball =
              , outfile = workfile outname
              }
     in do
+      doLog tarball
       extract_dcd (dcd ps) tarball
       save_script (script ps) $ rmsdScript (outfile ps) atomselect
       runCmd $ cmd ps
@@ -159,33 +161,39 @@ process info = do
   frames   <- concat <$> mapM (manage_tarball (workArea info)) tarballs
   return $ Right frames
 
-pps = ProjectParameters {
-        runs = 0
-      , clones = 0
-      , location = Tagged "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001"
-      }
-ti = mkToolInfo 808 1 (Tagged "/home/badi/Research/fah/test/data/PROJ10001") (Tagged "/tmp")
---tool :: Tool
-tool ti = handleSqlError $ do
-            res <- process ti
-            c <- connectMySQL defaultMySQLConnectInfo {
-                             mysqlHost = "localhost"
-                           , mysqlUser = "badi"
-                           , mysqlDatabase = "test"
-                           , mysqlUnixSocket = "/var/run/mysqld/mysqld.sock"
-                           }
-            let ts = [ uncurry tableCreate _master_table
-                     , newTable col_desc table_name]
-
-            doCreateTables ts c
-            commit c
-
-            ret <- case res of
-                     Left e -> return $ Left e
-                     Right vs  -> let structs = [(run ti, clone ti, Tagged i) | i <- [0..fromIntegral $ length vs]]
-                                  in do
-                                    insert c table_name col_name structs vs
-                                    return $ Right ()
+-- pps = ProjectParameters {
+--         runs = 0
+--       , clones = 0
+--       , location = Tagged "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001"
+--       }
+-- ti = mkToolInfo 808 1 (Tagged "/home/badi/Research/fah/test/data/PROJ10001") (Tagged "/tmp")
 
 
-            disconnect c
+connection = defaultMySQLConnectInfo {
+               mysqlHost = "localhost"
+             , mysqlUser = "badi"
+             , mysqlDatabase = "test"
+             , mysqlUnixSocket = "/var/run/mysqld/mysqld.sock"
+             }
+
+
+
+-- tool :: Tool
+tool c ti = handleSqlError $ do
+              res <- process ti
+              let ts = [ uncurry tableCreate _master_table
+                       , newTable col_desc table_name]
+
+              doCreateTables ts c
+              commit c
+
+              ret <- case res of
+                       Left e -> return $ Left e
+                       Right vs  -> let structs = [(run ti, clone ti, Tagged i) | i <- [0..fromIntegral $ length vs]]
+                                    in do
+                                      insert c table_name col_name structs vs
+                                      return $ Right ()
+
+
+              -- disconnect c
+              return ret
