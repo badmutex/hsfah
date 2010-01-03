@@ -39,8 +39,8 @@ findTrajPath' pa r c = let r'  = printf "RUN%d" (unTagged r)
                            pa' = unTagged pa
                        in Tagged $ pa' </> r' </> c'
 
-findTrajPath :: ToolInfo -> TrajPath
-findTrajPath ti = findTrajPath' (projectArea ti) (run ti) (clone ti)
+trajPath :: ToolInfo -> TrajPath
+trajPath ti = findTrajPath' (projectArea ti) (run ti) (clone ti)
 
 toolInfos :: ProjectParameters -> WorkArea -> [ToolInfo]
 toolInfos ps wa = map f vs
@@ -51,6 +51,6 @@ toolInfos ps wa = map f vs
 mkToolInfo :: RunType -> CloneType -> ProjArea -> WorkArea -> ToolInfo
 mkToolInfo r c projloc wa = ToolInfo { run         = Tagged r
                                      , clone       = Tagged c
-                                     , workarea    = wa
+                                     , workArea    = wa
                                      , projectArea = projloc
                                      }

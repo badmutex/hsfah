@@ -58,7 +58,7 @@ instance Convertible b c => Convertible (Tagged a b) c where
 data ToolInfo = ToolInfo {
       run         :: Run
     , clone       :: Clone
-    , workarea    :: WorkArea
+    , workArea    :: WorkArea
     , projectArea :: ProjArea
     }
 
@@ -73,9 +73,9 @@ type Tool = ToolInfo -> Action
 
 class Apply a b c where apply :: a -> b -> c
 
-type DBTool = IConnection c => c -> Tool
+type Analyzer a = ToolInfo -> IO (CatchError a)
 
-type Analyzer = Convertible v SqlValue => TrajPath -> IO (CatchError [v])
+type DBTool = (Convertible v SqlValue, IConnection c) => c -> Analyzer [v] -> Tool
 
 
 data ProjectParameters = ProjectParameters {
