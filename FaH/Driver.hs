@@ -8,5 +8,5 @@ import FaH.Types
 import Data.Tagged
 
 
-doWork :: ProjectParameters -> [Tool] -> IO WorkArea -> IO [Status]
+doWork :: ProjectParameters -> [Tool] -> IO WorkArea -> IO [Result]
 doWork params ts genWA = apply ts . toolInfos params =<< genWA

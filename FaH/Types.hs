@@ -63,11 +63,11 @@ data ToolInfo = ToolInfo {
     }
 
 
+type ErrorMsg = String
+type CatchError a = Either ErrorMsg a
+type Result = CatchError ()
 
-type Stat a = Either String a
-type Status = Stat ()
-
-type Action = IO Status
+type Action = IO Result
 
 type Tool = ToolInfo -> Action
 
@@ -75,7 +75,7 @@ class Apply a b c where apply :: a -> b -> c
 
 type DBTool = IConnection c => c -> Tool
 
-type Analyzer = Convertible v SqlValue => TrajPath -> [v]
+type Analyzer = Convertible v SqlValue => TrajPath -> IO (CatchError [v])
 
 
 data ProjectParameters = ProjectParameters {
