@@ -1,0 +1,18 @@
+name:                hsfah
+version:             0.0
+synopsis:            <Project description>
+description:         <Project description>
+category:            Codec
+license:             BSD3
+license-file:        LICENSE
+author:              Badi' Abdul-Wahid
+maintainer:          abdulwahidc@gmail.com
+build-type:          Simple
+ghc-options:         
+
+
+library
+    build-depends:       base
+    exposed-modules:
+                         FaH.Types
+                         FaH.Tool
