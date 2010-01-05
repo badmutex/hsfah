@@ -8,6 +8,8 @@
 
 module FaH.Types where
 
+import Control.Concurrent
+import Control.Monad.State
 import Data.Convertible
 import Data.Tagged
 
@@ -62,24 +64,19 @@ data ToolInfo = ToolInfo {
     , projectArea :: ProjArea
     } deriving Show
 
-
-type ErrorMsg = String
-type CatchError a = Either ErrorMsg a
-type Result = CatchError ()
-
-type Action = IO Result
-
-type Tool = ToolInfo -> Action
-
-class Apply a b c where apply :: a -> b -> c
-
-type Analyzer a = ToolInfo -> IO (CatchError a)
-
-type DBTool = (Convertible v SqlValue, IConnection c) => c -> Analyzer [v] -> Tool
-
-
 data ProjectParameters = ProjectParameters {
       runs :: RunType
     , clones :: CloneType
     , location :: ProjArea
     } deriving Show
+
+data Message a = Stop | Msg a
+newtype Log = Log String
+
+type ErrorMsg = String
+type CatchError a = Either ErrorMsg a
+
+type Worker a = StateT ToolInfo IO (CatchError a)
+type DBWorker a = IConnection c => c -> Worker a
+
+
