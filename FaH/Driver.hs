@@ -41,19 +41,23 @@ doWork params ts genWA = apply ts . toolInfos params =<< genWA
 
 ti ps = defaultWorkArea >>= \wa -> return $ toolInfos ps wa
 
--- job db params = do
---   c <- connectMySQL defaultMySQLConnectInfo {
---          mysqlHost = "phaeton.cse.nd.edu"
---        , mysqlUser = "cabdulwa"
---        , mysqlDatabase = db
---        -- , mysqlUnixSocket = "/var/run/mysqld/mysqld.sock"
---        }
+job chan db params = do
+  c <- connectMySQL defaultMySQLConnectInfo {
+         mysqlHost = "phaeton.cse.nd.edu"
+       , mysqlUser = "cabdulwa"
+       , mysqlDatabase = db
+       -- , mysqlUnixSocket = "/var/run/mysqld/mysqld.sock"
+       }
 
---   doWork params [tool c] defaultWorkArea
+  doWork params [tool chan c] defaultWorkArea
 
---   disconnect c
+  disconnect c
 
--- go = mapM_ (uncurry job) pps
+go = do
+  chan <- newChan
+  forkIO $ logger 0 chan
+  mapM_ (uncurry (job chan)) pps
+
 
 
 wrap i chan f = do f
@@ -95,8 +99,8 @@ mkConnection (DBName db) = connectMySQL defaultMySQLConnectInfo {
 pps = map (\((rs,cs,l),db) ->
                (db
                , ProjectParameters rs cs (Tagged $ "/afs/crc.nd.edu/user/l/lcls/fah/fahnd01/data01/data" </> l)))
-      [ ((0,0,"PROJ10001"), "test2")]
-      -- [ ((999,5,"PROJ10001"), "PROJ10001_allhs")]
+      -- [ ((0,0,"PROJ10001"), "test2")]
+      [ ((999,5,"PROJ10001"), "PROJ10001_allhs")]
       -- [ ((4999,0,"PROJ10000"), "PROJ10000_allhs")]
 
 
