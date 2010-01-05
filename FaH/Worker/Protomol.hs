@@ -15,25 +15,37 @@ import Control.Monad.Error
 
 _tarball_glob = "results-???.tar.bz2"
 
-data CmdParams = CmdParams {
-      tarballs :: [FilePath]
-    , vmd, psf, dcd, ref, script, outfile :: FilePath
+data ProtomolProjInfo = PPInfo {
+      trajInfo :: TrajInfo
+    , tarballs :: [FilePath]
     }
 
 
-get_tarballs :: TrajPath -> IO [FilePath]
-get_tarballs = fmap sort . globDir1 (compile _tarball_glob) . unTagged
 
-mkCmd :: TrajInfo -> [FilePath] -> CmdParams
-mkCmd = undefined
+protomol :: Worker ProtomolProjInfo b -> TrajWorker b
+protomol worker =
+    let mkCmd ti tarballs = PPInfo { trajInfo = ti
+                                   , tarballs = tarballs }
 
-protomol :: Worker CmdParams b -> TrajWorker b
-protomol worker = do
-  ti       <- get
-  tarballs <- liftIO . get_tarballs $ trajPath ti
-  
-  res      <- liftIO $ evalStateT (runErrorT worker) (mkCmd ti tarballs)
+        get_tarballs :: TrajPath -> IO [FilePath]
+        get_tarballs = fmap sort . globDir1 (compile _tarball_glob) . unTagged
 
-  case res of
-    Right v -> return v
-    Left e  -> throwError e
+    in do
+      trajinfo  <- get
+      tarballs  <- liftIO $ get_tarballs $ trajPath trajinfo
+      res       <- liftIO $ evalStateT (runErrorT worker) $ mkCmd trajinfo tarballs
+      case res of
+        Right v -> return v
+        Left e  -> throwError e
+
+
+testWorker :: Worker ProtomolProjInfo ()
+testWorker = do
+  ppi <- get
+  liftIO . mapM_ putStrLn $ tarballs ppi
+  throwError "42"
+
+testProtomolTraj = let ti = TrajInfo (Tagged 1) (Tagged 2) wa pa undefined
+                       pa = Tagged "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001" :: ProjArea
+                       wa = Tagged "/tmp/hsfahwa" :: WorkArea
+                   in evalStateT (runErrorT (protomol testWorker)) ti
