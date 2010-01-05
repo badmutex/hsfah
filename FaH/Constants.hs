@@ -13,10 +13,10 @@ import Text.Printf (printf)
 -- if the types need to be changed in the database, 
 -- this is the place to do so
 _db_structure_id_type = "varchar(200)"
-_db_run_type          = "integer unsigned not null"
-_db_clone_type        = "integer unsigned not null"
-_db_frame_type        = "integer unsigned not null"
-_db_rep_type          = "integer unsigned not null auto_increment"
+_db_run_type          = "integer default -1"
+_db_clone_type        = "integer default -1"
+_db_frame_type        = "integer default -1"
+_db_rep_type          = "integer unsigned auto_increment"
 
 
 -- names for the database stuff.
@@ -36,7 +36,8 @@ _master_table =
         frame = printf "%s %s" _db_table_master_frame _db_frame_type
         id    = printf "%s %s" _db_struct_id          _db_structure_id_type
         cols  = (intercalate ", " [run, clone, frame, id])
-        desc  = printf "%s, primary key ( %s, %s, %s )" cols _db_table_master_run _db_table_master_clone _db_table_master_frame
+        desc  = printf "%s, primary key ( %s, %s, %s )"
+                cols _db_table_master_run _db_table_master_clone _db_table_master_frame
     in (TableName "master", TableDesc desc)
 
 
