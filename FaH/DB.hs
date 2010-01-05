@@ -18,6 +18,8 @@ import FaH.Constants
 import FaH.Types
 import FaH.Util
 
+import Control.Monad.State
+
 import Control.Applicative ((<$>))
 import Data.Convertible (Convertible)
 import Data.List (intercalate)
@@ -132,7 +134,6 @@ doCreateTables ts c = do
 
 doAddTable :: IConnection c => TableCreate -> c -> IO ()
 doAddTable t = doCreateTables [t]
-
 
 
 

@@ -10,6 +10,7 @@ module FaH.Types where
 
 import Control.Concurrent
 import Control.Monad.State
+import Control.Monad.Error
 import Data.Convertible
 import Data.Tagged
 
@@ -57,12 +58,15 @@ instance Convertible b c => Convertible (Tagged a b) c where
     safeConvert = safeConvert . unTagged
 
 -- The info that a tool has access to
-data ToolInfo = ToolInfo {
+data TrajInfo = TrajInfo {
       run         :: Run
     , clone       :: Clone
     , workArea    :: WorkArea
     , projectArea :: ProjArea
-    } deriving Show
+    , logger      :: Logger
+    }
+
+
 
 data ProjectParameters = ProjectParameters {
       runs :: RunType
@@ -76,7 +80,37 @@ newtype Log = Log String
 type ErrorMsg = String
 type CatchError a = Either ErrorMsg a
 
-type Worker a = StateT ToolInfo IO (CatchError a)
-type DBWorker a = IConnection c => c -> Worker a
+type Worker a b = ErrorT String (StateT a IO) b
+type TrajWorker a = Worker TrajInfo a
+
+type Logger = Log -> IO ()
 
 
+
+
+test :: TrajWorker ()
+test = do
+  ti <- get
+  let r = unTagged . run $ ti
+  put $ ti { run = Tagged $ r + 1 }
+
+echo :: TrajWorker ()
+echo = do
+  ti <- get
+  liftIO . print $ run ti
+
+run' :: TrajWorker Run
+run' = do
+  ti <- get
+  return $ run ti
+
+test3 = do
+  test
+  test
+  test
+  test
+  echo
+  run'
+
+test2 = let ti = TrajInfo (Tagged 1) (Tagged 2) undefined undefined undefined
+        in evalStateT (runErrorT test3) ti

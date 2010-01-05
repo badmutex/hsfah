@@ -32,25 +32,3 @@ instance Apply  Tool  ToolInfo  Action         where apply = applyTool
 instance Apply [Tool] ToolInfo [Action]        where apply = applyAllTools
 instance Apply [Tool] ToolInfo   (IO [Result]) where apply = doAllTools
 instance Apply [Tool] [ToolInfo] (IO [Result]) where apply = doAllTrajs
-
-findTrajPath' :: ProjArea -> Run -> Clone -> TrajPath
-findTrajPath' pa r c = let r'  = printf "RUN%d" (unTagged r)
-                           c'  = printf "CLONE%d" (unTagged c)
-                           pa' = unTagged pa
-                       in Tagged $ pa' </> r' </> c'
-
-trajPath :: ToolInfo -> TrajPath
-trajPath ti = findTrajPath' (projectArea ti) (run ti) (clone ti)
-
-toolInfos :: ProjectParameters -> WorkArea -> [ToolInfo]
-toolInfos ps wa = map f vs
-    where vs = [ (r,c) | r <- [0..runs ps], c <- [0..clones ps] ]
-          f (r,c) = mkToolInfo r c (location ps) wa
-
-
-mkToolInfo :: RunType -> CloneType -> ProjArea -> WorkArea -> ToolInfo
-mkToolInfo r c projloc wa = ToolInfo { run         = Tagged r
-                                     , clone       = Tagged c
-                                     , workArea    = wa
-                                     , projectArea = projloc
-                                     }
