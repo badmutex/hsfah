@@ -18,6 +18,7 @@ import Database.HDBC.MySQL
 
 import Codec.Compression.BZip
 import Control.Applicative ((<$>))
+import Control.Concurrent.Chan
 import Data.Tagged
 import Data.List (intercalate, sort)
 import System.Exit
@@ -43,12 +44,14 @@ newtype Cmd = Cmd String
 binary = "vmd"
 outname = "rmsd.out"
 scriptname = "rmsd.tcl"
-psffile = "/home/badi/Research/fah/analysis/analysis/ww_exteq_nowater1.psf"
+psffile = "/afs/crc.nd.edu/user/c/cabdulwa/ww_exteq_nowater1.psf"
 dcdname = "ww.dcd"
-reffile = "/home/badi/Research/fah/analysis/analysis/ww_folded_min.pdb"
+reffile = "/dscratch/izaguirr/teamSims/santanu/analysis/ww_folded_nowater1.pdb"
 
--- atomselect = AS "alpha"
-atomselect = AS "alpha and (resid 6 to 11 or resid 16 to 21 or resid 25 to 28)"
+logfilename = "pvmdrmsd"
+
+atomselect = AS "protein and resid 11 to 16 21 to 26 30 to 33 and name CA"
+-- atomselect = AS "protein backbone and noh and resid 11 to 16 21 to 26 30 to 33"
 
 table_name = TableName "vmd_rmsd"
 col_name = ColName "rmsd"
@@ -57,18 +60,18 @@ col_desc = ColDesc "rmsd float"
 toolname = "Protomol VMD RMSD Tool"
 -- --------------------------------------------------- --
 
-log :: String -> String
-log s = printf "[%s LOG] %s" toolname s
+log :: String -> Message String
+log s = Log $ printf "[%s LOG] %s" toolname s
 
-doLog :: String -> IO ()
-doLog = putStrLn . log
+doLog :: Chan (Message String) -> String -> IO ()
+doLog chan = writeChan chan . log
 
 
 rmsdScript :: FilePath -> AtomSelect -> Script
 rmsdScript outfile (AS atomselect) =
     let script = intercalate "\n" $ [
                   ""
-                 ,  "set trajid [molinfo index 0]"
+                 , "set trajid [molinfo index 0]"
                  , "set refid [molinfo index 1]"
 
                  , "set outfile %s"
@@ -81,6 +84,7 @@ rmsdScript outfile (AS atomselect) =
                  , "for {set i 0} { $i < $n} {incr i} {"
                  , "    $traj frame $i"
                  , "    set fit [measure fit $ref $traj]"
+                 , "    $ref move $fit"
                  , "    set rmsd [measure rmsd $ref $traj]"
                  , "    puts $f \"$rmsd\""
                  , "}"
@@ -132,8 +136,8 @@ extract_dcd target tarball = do
     Left e   -> return $ Left e
 
 
-manage_tarball :: WorkArea -> FilePath -> IO [Double]
-manage_tarball wa tarball =
+manage_tarball :: Chan (Message String) -> WorkArea -> FilePath -> IO [Double]
+manage_tarball chan wa tarball =
     let workfile = work_name wa
         ps = CmdParams {
                vmd     = binary
@@ -144,7 +148,7 @@ manage_tarball wa tarball =
              , outfile = workfile outname
              }
     in do
-      doLog tarball
+      doLog chan tarball
       extract_dcd (dcd ps) tarball
       save_script (script ps) $ rmsdScript (outfile ps) atomselect
       runCmd $ cmd ps
@@ -155,10 +159,10 @@ manage_tarball wa tarball =
       return ret
 
 
-process :: Analyzer [Double]
-process info = do
+-- process :: Analyzer [Double]
+process chan info = do
   tarballs <- get_tarballs $ trajPath info
-  frames   <- concat <$> mapM (manage_tarball (workArea info)) tarballs
+  frames   <- concat <$> mapM (manage_tarball chan (workArea info)) tarballs
   return $ Right frames
 
 -- pps = ProjectParameters {
@@ -179,8 +183,8 @@ connection = defaultMySQLConnectInfo {
 
 
 -- tool :: Tool
-tool c ti = handleSqlError $ do
-              res <- process ti
+tool chan c ti = handleSqlError $ do
+              res <- process chan ti
               let ts = [ uncurry tableCreate _master_table
                        , newTable col_desc table_name]
 

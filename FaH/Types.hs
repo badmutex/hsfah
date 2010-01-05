@@ -83,3 +83,6 @@ data ProjectParameters = ProjectParameters {
     , clones :: CloneType
     , location :: ProjArea
     } deriving Show
+
+
+data Message a = Finish | Log a
