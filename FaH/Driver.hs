@@ -60,15 +60,14 @@ go2 i xs dbn =
     let chunks = chunkify i xs
     in do
       chan <- newChan
-      forkIO $ logger chan
       forM_ chunks (\c -> forkIO $ work_chunk chan dbn c)
-      forever $ return ()
+      logger 1 (length chunks)  chan
 
 go2' i = go2 i xs (DBName "PROJ10001_allhs")
 
 xs = [ (r,c,parea) | r <- [64..1000], c <- [0..5] ]
 
-testgo2 = go2 1 [(0,0,parea),(1,1,parea), (2,2,parea)] (DBName "test2")
+testgo2 = go2 1 [(0,0,parea),(1,1,parea)] (DBName "test2")
 
 chunkify :: Int -> [a] -> [[a]]
 chunkify i xs = reverse $ foldl (f i) [[]] xs
@@ -87,7 +86,7 @@ pps = map (\((rs,cs,l),db) ->
 
 parea = Tagged $ "/afs/crc.nd.edu/user/l/lcls/fah/fahnd01/data01/data/PROJ10001"
 
--- work_chunk :: Chan (Message String) -> DBName -> [(RunType,CloneType, ProjArea)] -> IO ()
+work_chunk :: Chan (Message String) -> DBName -> [(RunType,CloneType, ProjArea)] -> IO ()
 work_chunk chan  (DBName db) tis = do
   c       <- connectMySQL defaultMySQLConnectInfo {
                              mysqlHost = "phaeton.cse.nd.edu"
@@ -96,19 +95,22 @@ work_chunk chan  (DBName db) tis = do
                            }
 
   wa      <- defaultWorkArea
-  mapM (applyTool (tool chan c)) $ map (\ti -> uncurry3 mkToolInfo ti wa) tis
+  mapM_ (applyTool (tool chan c)) $ map (\ti -> uncurry3 mkToolInfo ti wa) tis
   -- doAllTrajs [tool c] $ map (\ti -> uncurry3 mkToolInfo ti wa) tis
 
   disconnect c
+  writeChan chan Finish
 
   
 
 
-logger chan = forever $ do
+logger i max chan = forever $ do
   msg <- readChan chan
   case msg of
-    Finish -> do myThreadId >>= killThread
+    Finish -> if i >= max then putStrLn "Finished" >>  return ()
+              else putStrLn (show i ++ " of " ++ show max) >> logger (i+1) max chan
     Log m  -> do putStrLn m
+                 logger i max chan
 
 
 
