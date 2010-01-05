@@ -79,7 +79,6 @@ masterInsertVals vals = map (\v -> to v (uncurry3 mkStructId v)) vals
                          in [r',c',f', i']
 
 
-
 insertIntoMaster :: IConnection c => [(Run, Clone, Frame)] -> c -> IO ()
 insertIntoMaster vals c =
     let s = printf
@@ -94,6 +93,7 @@ insertIntoMaster vals c =
     in do
       ps <- prepare c s
       executeMany ps vs
+      commit c
 
 
 insert :: (Convertible v SqlValue, IConnection c) =>
@@ -112,13 +112,15 @@ insert c (TableName tn) (ColName cn) structs vals =
         -- this is expected (reason for 'rep' column), so ignore the exception
         checkMaster = insertIntoMaster structs c
                       `catchSql`
-                      \e -> if seNativeError e == 1062 -- duplicate entry
-                            then return ()
-                            else throwSqlError e
+                      \e -> case seNativeError e of
+                              1062 -> return () -- duplicate entry
+                              1048 -> return () -- column cannot be null (bug?)
+                              otherwise ->  throwSqlError e
     in do
       checkMaster
       ps <- prepare c s
       executeMany ps vs
+      commit c
 
 
 

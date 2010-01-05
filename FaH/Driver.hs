@@ -56,24 +56,40 @@ ti ps = defaultWorkArea >>= \wa -> return $ toolInfos ps wa
 -- go = mapM_ (uncurry job) pps
 
 
+wrap i chan f = do f
+                   `catchSql`
+                   \e -> if i > 0
+                         then do writeChan chan (Log $ "[SQL ERROR] rerunning")
+                                 wrap (i - 1) chan f
+                         else return ()
+
 go2 i xs dbn =
     let chunks = chunkify i xs
     in do
       chan <- newChan
-      forM_ chunks (\c -> forkIO $ work_chunk chan dbn c)
-      logger 1 (length chunks)  chan
+      conn <- mkConnection dbn
+      forM_ chunks (\c -> forkIO $ wrap 9 chan (work_chunk chan (DB.clone conn) dbn c))
+      logger (length chunks)  chan
 
-go2' i = go2 i xs (DBName "PROJ10001_allhs")
+go2' i = go2 i xs proj10001
+
+proj10001 = DBName "PROJ10001_allhs"
+testdb = DBName "test2"
 
 xs = [ (r,c,parea) | r <- [64..1000], c <- [0..5] ]
 
-testgo2 = go2 1 [(0,0,parea),(1,1,parea)] (DBName "test2")
+testgo2 = go2 1 [(0,0,parea),(1,1,parea)] testdb
 
 chunkify :: Int -> [a] -> [[a]]
 chunkify i xs = reverse $ foldl (f i) [[]] xs
     where f i (as:bs) x = if length as >= i then [x] : as : bs
                           else (as ++ [x]) : bs
-  
+
+mkConnection (DBName db) = connectMySQL defaultMySQLConnectInfo {
+                             mysqlHost = "phaeton.cse.nd.edu"
+                           , mysqlUser = "cabdulwa"
+                           , mysqlDatabase = db
+                           }
 
 
 pps = map (\((rs,cs,l),db) ->
@@ -86,17 +102,12 @@ pps = map (\((rs,cs,l),db) ->
 
 parea = Tagged $ "/afs/crc.nd.edu/user/l/lcls/fah/fahnd01/data01/data/PROJ10001"
 
-work_chunk :: Chan (Message String) -> DBName -> [(RunType,CloneType, ProjArea)] -> IO ()
-work_chunk chan  (DBName db) tis = do
-  c       <- connectMySQL defaultMySQLConnectInfo {
-                             mysqlHost = "phaeton.cse.nd.edu"
-                           , mysqlUser = "cabdulwa"
-                           , mysqlDatabase = db
-                           }
-
+-- work_chunk :: Chan (Message String) -> DBName -> [(RunType,CloneType, ProjArea)] -> IO ()
+work_chunk chan conn  (DBName db) tis = do
+  c       <- conn
   wa      <- defaultWorkArea
+
   mapM_ (applyTool (tool chan c)) $ map (\ti -> uncurry3 mkToolInfo ti wa) tis
-  -- doAllTrajs [tool c] $ map (\ti -> uncurry3 mkToolInfo ti wa) tis
 
   disconnect c
   writeChan chan Finish
@@ -104,13 +115,13 @@ work_chunk chan  (DBName db) tis = do
   
 
 
-logger i max chan = forever $ do
+logger i chan = forever $ do
   msg <- readChan chan
   case msg of
-    Finish -> if i >= max then putStrLn "Finished" >>  return ()
-              else putStrLn (show i ++ " of " ++ show max) >> logger (i+1) max chan
+    Finish -> if i <= 1 then putStrLn "Finished" >>  myThreadId >>= killThread >> return ()
+              else putStrLn (show (i-1) ++ " left. ") >> logger (i-1)  chan
     Log m  -> do putStrLn m
-                 logger i max chan
+                 logger i chan
 
 
 

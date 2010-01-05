@@ -27,7 +27,7 @@ mkWorkArea root n = do
 
   setStdGen g3
 
-  createDirectory name
+  createDirectoryIfMissing True name
   return $ Tagged name
 
 
