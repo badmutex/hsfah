@@ -33,16 +33,18 @@ type Cmd = Tagged PCmd String
 
 data CmdParams = CmdParams {
       vmd, psf, dcd, ref, script, outfile :: FilePath
+    , screenout :: String
     } deriving Show
 
+data Output = DevNull | Err2Out | Out2Err | Default
 
 save_script :: FilePath -> Script -> IO ()
 save_script p s = writeFile p (unTagged s)
 
 
 mkCmd :: CmdParams -> Cmd
-mkCmd p = let cmd = printf "%s -dispdev text -psf %s -dcd %s -f %s < %s"
-                    (vmd p) (psf p) (dcd p) (ref p) (script p)
+mkCmd p = let cmd = printf "%s -dispdev text -psf %s -dcd %s -f %s < %s %s"
+                    (vmd p) (psf p) (dcd p) (ref p) (script p) (screenout p)
           in Tagged cmd
 
 
@@ -53,15 +55,6 @@ runCmd cmd = do h <- runCommand $ unTagged cmd
 
 rmsd_results :: FilePath -> IO [Double]
 rmsd_results p = (map read . words) `fmap` readFile p
-
-
--- ---------------------------------------- --
-_vmd_bin = "vmd"
-_psffile = "/tmp/ww.psf"
-_dcdname = "/tmp/ww.dcd"
-_reffile = "/tmp/ww_folded.pdb"
-_rmsdname = "rmsd.tcl"
-_rmsdfile = "rmsd.out"
 
 rmsdScript :: FilePath -> AtomSelect -> Script
 rmsdScript outfile atomselect =
@@ -87,40 +80,80 @@ rmsdScript outfile atomselect =
                  , "close $f"
                  ]
     in Tagged $ printf script outfile (unTagged atomselect) (unTagged atomselect)
--- ---------------------------------------- --
 
-rmsd :: Tool [Double]
-rmsd = do
+
+data FileInfo = FileInfo {
+      vmd_bin , psfpath, foldedpath :: FilePath
+    , scriptname, resultsname, dcdname :: String
+    , atomselect :: AtomSelect
+    , screenoutput :: Output
+    }
+
+genParams :: FileInfo -> WorkArea -> (CmdParams,AtomSelect)
+genParams fi wa = (params, atomselect fi)
+    where wa' = unTagged wa
+          params = CmdParams {
+                     vmd     = vmd_bin fi
+                   , psf     = psfpath fi
+                   , dcd     = wa' </> dcdname fi
+                   , ref     = foldedpath fi
+                   , script  = wa' </> scriptname fi
+                   , outfile = wa' </> resultsname fi
+                   , screenout = case screenoutput fi of
+                                   DevNull -> ">/dev/null"
+                                   Err2Out -> "2>&1"
+                                   Out2Err -> "1>&2"
+                                   Default -> ""
+                   }
+
+type GenCmdParams = WorkArea -> (CmdParams,AtomSelect)
+type ChooseRemovableFiles = CmdParams -> [FilePath]
+
+
+
+-- ======================================== --
+
+rmsd :: GenCmdParams -> ChooseRemovableFiles -> Tool [Double]
+rmsd genParams removableFiles = do
   info <- get
 
-  let params = CmdParams {
-                 vmd = _vmd_bin
-               , psf = _psffile
-               , dcd = wa </> _dcdname
-               , ref = _reffile
-               , script = wa </> _rmsdname
-               , outfile = wa </> _rmsdfile
-               }
-      wa = unTagged $ workArea info
-      rmsd_tcl = wa </> _rmsdname
-      rmsdfile = wa </> _rmsdfile
+  let (params,atomsel) = genParams $ workArea info
       cmd = mkCmd params
-      script = rmsdScript rmsdfile (Tagged "all")
 
-      log = liftIO . putStrLn -- logger info . Log
+  liftIO $ logger info . Log $ show (unTagged $ run info, unTagged $ clone info)
 
-  log $ unTagged cmd
-  log $ unTagged script
+  liftIO $ save_script (script params) 
+         $ rmsdScript  (outfile params) atomsel
+  liftIO $ runCmd . mkCmd
+         $ params
 
-  liftIO . save_script rmsd_tcl . rmsdScript rmsdfile $ Tagged "all"
-  liftIO . runCmd . mkCmd $ params
-  results <- liftIO $ rmsd_results rmsdfile
+  results <- liftIO $ rmsd_results (outfile params)
 
-  -- cleanup
-  liftIO $ mapM_ removeLink [rmsd_tcl,rmsdfile]
+  liftIO . mapM_ removeLink $ removableFiles params
 
   return results
 
+-- ======================================== --
 
-test = let ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp") undefined
-       in evalStateT (runErrorT rmsd) ti
+
+
+
+-- ---------------------------------------- --
+testrmsd = let ti = ToolInfo r c wa (\(Log l) -> putStrLn l)
+               r = Tagged 1
+               c = Tagged 2
+               wa = Tagged "/tmp"
+               l (Log str) = putStrLn str
+               fileinfo = FileInfo { vmd_bin = "vmd"
+                                   , psfpath = "/tmp/ww.psf"
+                                   , foldedpath = "/tmp/ww_folded.pdb"
+                                   , scriptname = "rmsd.tcl"
+                                   , resultsname = "rmsd.out"
+                                   , dcdname = "ww.dcd"
+                                   , atomselect = Tagged "all"
+                                   , screenoutput = DevNull
+                                   }
+               genparams = genParams fileinfo
+               remove ps = [script ps, outfile ps]
+           in evalStateT (runErrorT (rmsd genparams remove)) ti
+-- ---------------------------------------- --
