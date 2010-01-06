@@ -11,6 +11,9 @@ import System.FilePath
 
 import Control.Concurrent (Chan, ThreadId, myThreadId, killThread, forkIO, readChan, writeChan)
 import Control.Monad (forever)
+import Control.Monad.Error
+import Control.Monad.State
+
 
 uncurry3 :: (a -> b -> c -> d) -> (a,b,c) -> d
 uncurry3 f (a,b,c) = f a b c
@@ -51,3 +54,14 @@ mkTrajInfo r c projloc wa loggin = TrajInfo { run         = Tagged r
                                             , projectArea = projloc
                                             , logger      = loggin
                                             }
+
+
+
+-- | Eval State and Run Error Monadic action
+esrem e s = evalStateT (runErrorT e) s
+
+-- | Wrapped Eval and State Run Error Monadic action
+wesrem e s = do result <- liftIO $ esrem e s
+                case result of
+                  Right vs -> return vs
+                  Left e   -> throwError e

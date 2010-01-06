@@ -32,11 +32,9 @@ protomol worker =
 
     in do
       trajinfo  <- get
-      tarballs  <- liftIO $ get_tarballs $ trajPath trajinfo
-      res       <- liftIO $ evalStateT (runErrorT worker) $ mkCmd trajinfo tarballs
-      case res of
-        Right v -> return v
-        Left e  -> throwError e
+      tarballs  <- liftIO . get_tarballs $ trajPath trajinfo
+      wesrem worker $ mkCmd trajinfo tarballs
+
 
 
 testWorker :: Worker ProtomolProjInfo ()
@@ -48,4 +46,4 @@ testWorker = do
 testProtomolTraj = let ti = TrajInfo (Tagged 1) (Tagged 2) wa pa undefined
                        pa = Tagged "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001" :: ProjArea
                        wa = Tagged "/tmp/hsfahwa" :: WorkArea
-                   in evalStateT (runErrorT (protomol testWorker)) ti
+                   in esrem (protomol testWorker) ti
