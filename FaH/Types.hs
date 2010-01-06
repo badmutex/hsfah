@@ -54,3 +54,4 @@ data TrajInfo = TrajInfo Run [Clone] WorkArea
 
 type Tool a = ErrorT String (StateT ToolInfo IO) a
 
+type TrajTool a = ErrorT String (StateT (TrajInfo,Tool a) IO) a
