@@ -41,14 +41,16 @@ toolInfos (TrajInfo run clones projarea workarea) =
 ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
 trji = TrajInfo (Tagged 1) (map Tagged [0..5]) (Tagged "/tmp/pa") (Tagged "/tmp/wa")
 
-testtool :: Tool Int
+testtool :: Tool ()
 testtool = do
   ti <- ask
-  tell ["testtool"]
-  return . unTagged $ clone ti
+  tell ["testtool " ++ show (clone ti)]
 
-fah :: FaH ()
-fah = do
+
+fah :: Tool () -> FaH ()
+fah tool = do
   tri <- get
-  
+  lift . lift $ tool
   return ()
+
+testfah = runFaH (fah testtool) trji ti

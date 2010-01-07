@@ -73,47 +73,9 @@ runTrajTool trtool trinfo = runListT (evalStateT (runWriterT (runErrorT trtool))
 
 type FaH = StateT TrajInfo (ListT Tool)
 
-type FaH' a = StateT TrajInfo (ReaderT (Tool a) IO)
 
 runFaH :: FaH a -> TrajInfo -> ToolInfo -> IO (Either String [a], [String])
 runFaH fah trinfo  = runTool (runListT (evalStateT fah trinfo))
 
--- runFaH' :: FaH' a -> TrajInfo -> Tool a -> ToolInfo -> IO (Either String a, [String])
-runFaH'
-  :: StateT
-       s -- TrajInfo
-       (ReaderT
-          r (ErrorT String (WriterT [String] (ReaderT ToolInfo IO))))
-       a -- 
-     -> s
-     -> r
-     -> ToolInfo
-     -> IO (Either String a, [String])
-runFaH' fah trinfo tool = runTool (runReaderT (evalStateT fah trinfo) tool)
 
 
-
-testtool :: Tool Int
-testtool = do
-  ti <- ask
-  liftIO $ print ti
-  return 42
-
-
-ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
-trji = TrajInfo (Tagged 1) (map Tagged [0..5]) (Tagged "/tmp/pa") (Tagged "/tmp/wa")
-
--- testtrajtool :: TrajTool [Clone]
--- testtrajtool = do
---   (TrajInfo _ cs _ _) <- get
-  
---   return cs
-
-type TL a = ListT (ReaderT a Identity)
-runTL m r = runIdentity (runReaderT (runListT m) r)
-
-
-testTL = do
-  x <- [1..4]
-  y <- [5..10]
-  return (x,y)
