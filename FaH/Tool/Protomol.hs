@@ -40,7 +40,7 @@ tarballs :: TrajArea -> IO [Tarball]
 tarballs tra = globDir1 (compile _results_glob) (unTagged tra)
 
 
-protomol :: Tool a -> FaH b
+protomol :: Tool a -> Traj b
 protomol tool = do
   addLog' "starting"
   

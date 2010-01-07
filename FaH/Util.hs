@@ -40,11 +40,11 @@ testtool = do
   return . unTagged . clone $ ti
 
 
-fah :: Tool Int -> FaH Int
-fah tool = do
+traj :: Tool Int -> Traj Int
+traj tool = do
   tri <- get
-  addLog "fah"
+  addLog "traj"
   doTool tool
   
 
-testfah = runFaH (fah testtool) trji ti
+testtraj = runTraj (traj testtool) trji ti

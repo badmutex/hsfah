@@ -12,10 +12,9 @@ module FaH.Types ( Run, Clone
                  , Log (..)
 
                  , ToolInfo (..), TrajInfo (..)
-                 , runTool, runFaH
 
-                 , Tool
-                 , FaH
+                 , Tool, Traj
+                 , runTool, runTraj
 
                  , getToolInfo, throw, doTool
 
@@ -65,15 +64,15 @@ type Tool = ErrorT String (WriterT [String] (ReaderT ToolInfo IO))
 runTool :: Tool a -> ToolInfo -> IO (Either String a, [String])
 runTool t = runReaderT (runWriterT (runErrorT t))
 
-type FaH = StateT TrajInfo (ListT Tool)
-runFaH :: FaH a -> TrajInfo -> ToolInfo -> IO (Either String [a], [String])
-runFaH fah trinfo  = runTool (runListT (evalStateT fah trinfo))
+type Traj = StateT TrajInfo (ListT Tool)
+runTraj :: Traj a -> TrajInfo -> ToolInfo -> IO (Either String [a], [String])
+runTraj traj trinfo  = runTool (runListT (evalStateT traj trinfo))
 
 class Log m where
     addLog :: String -> m ()
 
 instance Log Tool where addLog = toolLog
-instance Log FaH where addLog = fahLog
+instance Log Traj where addLog = fahLog
 
 getToolInfo = ask
 toolLog s = tell [s]
