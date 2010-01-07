@@ -18,9 +18,10 @@ mkWorkArea root n = do
   g <- getStdGen
   let (g0,g1) = split g
       (g2,g3) = split g1
+      l = 9
 
-      uletters = take 4 $ randomRs ('A','Z') g1
-      lletters = take 4 $ randomRs ('a','z') g0
+      uletters = take l $ randomRs ('A','Z') g1
+      lletters = take l $ randomRs ('a','z') g0
       (numbers,_)  = randomR (0,65534) g2 :: (Int, StdGen)
 
       name = root </> n ++ uletters ++ lletters ++ show numbers
