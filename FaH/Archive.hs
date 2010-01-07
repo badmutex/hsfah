@@ -16,7 +16,7 @@ type Tarball   = FilePath
 type TargetDir = FilePath
 
 
-unpack_tarbz2 :: Tarball -> TargetDir -> IO ()
-unpack_tarbz2 tarball targetdir = do
+extract_tarbz2 :: Tarball -> TargetDir -> IO ()
+extract_tarbz2 tarball targetdir = do
   entries <- Tar.read . decompress <$> BS.readFile tarball
   Tar.unpack targetdir entries

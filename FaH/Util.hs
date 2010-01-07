@@ -20,9 +20,17 @@ logger chan = forever $ do
                   Stop        -> myThreadId >>= killThread
                   Msg (Log l) -> putStrLn l
 
-trajPath :: ProjArea -> Run -> Clone -> FilePath
+trajPath :: ProjArea -> Run -> Clone -> TrajArea
 trajPath (Tagged wa)
          (Tagged r)
-         (Tagged c) = wa </> "RUN" ++ show r </> "CLONE" ++ show c
+         (Tagged c) = Tagged $ wa </> "RUN" ++ show r </> "CLONE" ++ show c
 
 
+toolInfos :: TrajInfo -> [ToolInfo]
+toolInfos (TrajInfo run clones projarea workarea) =
+    map mk clones
+        where mk c = ToolInfo { run = run
+                              , clone = c
+                              , workArea = workarea
+                              , trajArea = trajPath projarea run c
+                              }

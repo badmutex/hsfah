@@ -120,7 +120,7 @@ rmsd genParams removableFiles = do
   let (params,atomsel) = genParams $ workArea info
       cmd = mkCmd params
 
-  liftIO $ logger info . Log $ show (unTagged $ run info, unTagged $ clone info)
+
 
   liftIO $ save_script (script params) 
          $ rmsdScript  (outfile params) atomsel
@@ -139,14 +139,14 @@ rmsd genParams removableFiles = do
 
 
 -- ---------------------------------------- --
-testrmsd = let ti = ToolInfo r c wa (\(Log l) -> putStrLn l)
+testrmsd = let ti = ToolInfo r c wa undefined 
                r = Tagged 1
                c = Tagged 2
-               wa = Tagged "/tmp"
+               wa = Tagged "/tmp/test"
                l (Log str) = putStrLn str
                fileinfo = FileInfo { vmd_bin = "vmd"
-                                   , psfpath = "/tmp/ww.psf"
-                                   , foldedpath = "/tmp/ww_folded.pdb"
+                                   , psfpath = "/tmp/test/ww.psf"
+                                   , foldedpath = "/tmp/test/ww_folded.pdb"
                                    , scriptname = "rmsd.tcl"
                                    , resultsname = "rmsd.out"
                                    , dcdname = "ww.dcd"
