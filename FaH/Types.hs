@@ -11,8 +11,6 @@ module FaH.Types where
 import Data.Convertible
 import Data.Tagged
 
-import Database.HDBC (IConnection, SqlValue)
-
 
 data PRun
 data PClone
@@ -75,7 +73,7 @@ class Apply a b c where apply :: a -> b -> c
 
 type Analyzer a = ToolInfo -> IO (CatchError a)
 
-type DBTool = (Convertible v SqlValue, IConnection c) => c -> Analyzer [v] -> Tool
+
 
 
 data ProjectParameters = ProjectParameters {
