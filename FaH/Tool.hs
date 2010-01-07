@@ -54,3 +54,5 @@ mkToolInfo r c projloc wa = ToolInfo { run         = Tagged r
                                      , workArea    = wa
                                      , projectArea = projloc
                                      }
+
+
