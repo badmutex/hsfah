@@ -31,6 +31,9 @@ type Script = Tagged PScript String
 type Cmd = Tagged PCmd String
 
 
+_name = "FaH.Tool.Protomol.VMD.RMSD"
+
+
 data CmdParams = CmdParams {
       vmd, psf, dcd, ref, script, outfile :: FilePath
     , screenout :: String
@@ -111,11 +114,15 @@ type ChooseRemovableFiles = CmdParams -> [FilePath]
 
 
 
+addLog' = addLog . printf "[%s] %s" _name 
+
 -- ======================================== --
 
 rmsd :: GenCmdParams -> ChooseRemovableFiles -> Tool [Double]
 rmsd genParams removableFiles = do
-  info <- get
+  addLog' "starting"
+
+  info <- getToolInfo
 
   let (params,atomsel) = genParams $ workArea info
       cmd = mkCmd params
@@ -131,6 +138,7 @@ rmsd genParams removableFiles = do
 
   liftIO . mapM_ removeLink $ removableFiles params
 
+  addLog' "sucess!"
   return results
 
 -- ======================================== --
@@ -143,7 +151,6 @@ testrmsd = let ti = ToolInfo r c wa undefined
                r = Tagged 1
                c = Tagged 2
                wa = Tagged "/tmp/test"
-               l (Log str) = putStrLn str
                fileinfo = FileInfo { vmd_bin = "vmd"
                                    , psfpath = "/tmp/test/ww.psf"
                                    , foldedpath = "/tmp/test/ww_folded.pdb"
@@ -155,5 +162,5 @@ testrmsd = let ti = ToolInfo r c wa undefined
                                    }
                genparams = genParams fileinfo
                remove ps = [script ps, outfile ps]
-           in evalStateT (runErrorT (rmsd genparams remove)) ti
+           in runTool (rmsd genparams remove) ti
 -- ---------------------------------------- --

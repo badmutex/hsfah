@@ -1,5 +1,8 @@
 {-# LANGUAGE
   EmptyDataDecls
+  , NoMonomorphismRestriction
+  , MultiParamTypeClasses
+  , TypeSynonymInstances
   #-}
 
 module FaH.Types ( Run, Clone
@@ -7,7 +10,6 @@ module FaH.Types ( Run, Clone
 
                  , Message (..)
                  , Log (..)
-                 , Logger
 
                  , ToolInfo (..), TrajInfo (..)
                  , runTool, runTrajTool, runFaH
@@ -15,6 +17,8 @@ module FaH.Types ( Run, Clone
                  , Tool
                  , TrajTool
                  , FaH
+
+                 , getToolInfo, throw, doTool
 
                  ) where
 
@@ -48,10 +52,6 @@ type TrajArea  = Tagged PTrajArea FilePath
 
 data Message a = Stop | Msg a
 
-newtype Log    = Log String
-type Logger    = Log -> IO ()
-
-
 data ToolInfo  = ToolInfo {
       run      :: Run
     , clone    :: Clone
@@ -63,13 +63,13 @@ data ToolInfo  = ToolInfo {
 data TrajInfo = TrajInfo Run [Clone] ProjArea WorkArea deriving Show
 
 type Tool = ErrorT String (WriterT [String] (ReaderT ToolInfo IO))
-type TrajTool = ErrorT String (WriterT [String] (StateT TrajInfo (ListT IO)))
+type TrajTool = ErrorT String (WriterT [String] (ReaderT TrajInfo (ListT IO)))
 
 runTool :: Tool a -> ToolInfo -> IO (Either String a, [String])
 runTool t = runReaderT (runWriterT (runErrorT t))
 
---runTrajTool :: TrajTool a -> TrajInfo -> IO [(Either String a, [String])]
-runTrajTool trtool trinfo = runListT (evalStateT (runWriterT (runErrorT trtool)) trinfo)
+runTrajTool :: TrajTool a -> TrajInfo -> IO [(Either String a, [String])]
+runTrajTool trtool trinfo = runListT (runReaderT (runWriterT (runErrorT trtool)) trinfo)
 
 type FaH = StateT TrajInfo (ListT Tool)
 
@@ -77,5 +77,15 @@ type FaH = StateT TrajInfo (ListT Tool)
 runFaH :: FaH a -> TrajInfo -> ToolInfo -> IO (Either String [a], [String])
 runFaH fah trinfo  = runTool (runListT (evalStateT fah trinfo))
 
+class Log m where
+    addLog :: String -> m ()
 
+instance Log Tool where addLog = toolLog
+instance Log FaH where addLog = fahLog
 
+getToolInfo = ask
+toolLog s = tell [s]
+fahLog s = lift . lift . tell $ [s]
+throw = fail
+
+doTool = lift . lift
