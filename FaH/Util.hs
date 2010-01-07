@@ -6,6 +6,9 @@ import FaH.Types
 
 import Control.Concurrent
 import Control.Monad
+import Control.Monad.State
+import Control.Monad.Reader
+import Control.Monad.Writer
 
 import Data.Tagged
 
@@ -34,3 +37,18 @@ toolInfos (TrajInfo run clones projarea workarea) =
                               , workArea = workarea
                               , trajArea = trajPath projarea run c
                               }
+
+ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
+trji = TrajInfo (Tagged 1) (map Tagged [0..5]) (Tagged "/tmp/pa") (Tagged "/tmp/wa")
+
+testtool :: Tool Int
+testtool = do
+  ti <- ask
+  tell ["testtool"]
+  return . unTagged $ clone ti
+
+fah :: FaH ()
+fah = do
+  tri <- get
+  
+  return ()
