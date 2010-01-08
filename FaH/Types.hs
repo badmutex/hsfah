@@ -3,6 +3,9 @@
   , NoMonomorphismRestriction
   , MultiParamTypeClasses
   , TypeSynonymInstances
+  , ExistentialQuantification
+  , RankNTypes
+  , FlexibleContexts
   #-}
 
 module FaH.Types ( Run, Clone
@@ -68,6 +71,12 @@ runTool :: Tool a -> Logger -> ToolInfo -> IO (Either String a)
 runTool t = runReaderT . runReaderT (runErrorT t)
 
 
+type Traj' = ErrorT String (ReaderT Logger (ReaderT TrajInfo (ReaderT (Tool ()) IO)))
+
+runTraj' :: Traj a -> Logger -> TrajInfo -> Tool a -> IO (Either String a)
+runTraj' tr l tri = runReaderT (runReaderT (runReaderT (runErrorT tr) l) tri)
+
+
 type Traj a = ErrorT String (ReaderT Logger (ReaderT TrajInfo (ReaderT (Tool a) IO))) a
 
 runTraj :: Traj a -> Logger -> TrajInfo -> Tool a -> IO (Either String a)
@@ -83,6 +92,10 @@ instance Log Tool where
     addLog s = do l <- toolLogger
                   liftIO $ l s
 
+
+
+
+
 logger :: Chan (Message String) -> IO ()
 logger chan = do
   msg <- readChan chan
@@ -94,19 +107,19 @@ logger chan = do
 logging chan str = writeChan chan (Msg str)
 
 
-test = do
+test1 = do
   chan <- newChan
   let tool :: Tool ()
-      tool = mapM_ addLog ["hello","world","how","are","you","?"]
+      tool = addLog "tool"
       l = logging chan
   runTool tool l undefined
   writeChan chan Stop
   logger chan
 
--- test = let tool = getToolInfo
---            l = undefined
---            ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
---        in runTool tool l ti
+test2 = let tool = getToolInfo
+            l = undefined
+            ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
+        in runTool tool l ti
 
 getToolInfo :: Tool ToolInfo
 getToolInfo = lift.lift $ ask
@@ -114,8 +127,13 @@ getToolInfo = lift.lift $ ask
 toolLogger :: Tool Logger
 toolLogger = lift ask
 
-trajLogger :: Traj Logger
+trajLogger :: Traj' Logger
 trajLogger = lift $ ask
+
+trajLog :: String -> Traj' ()
+trajLog s = do l <- trajLogger
+               liftIO $ l s
+
 
 
 toolLog s = tell [s]
