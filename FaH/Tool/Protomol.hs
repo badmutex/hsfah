@@ -15,7 +15,7 @@ import Control.Applicative ((<$>))
 import Control.Monad.Error
 import Control.Monad.State
 import Control.Monad.List
-import Control.Monad
+import Control.Monad.Reader
 
 import Data.List (sort)
 import Data.Tagged
@@ -40,10 +40,13 @@ handle_tarball tool target tball = do
   liftIO $ createDirectoryIfMissing True target
   liftIO $ sys_extract_tarbz2 tball target
 
-  tool
+  local (\ti -> ti {workArea = workArea ti <//> Tagged target}) tool
 
 
 
+joinWorkArea :: WorkArea -> WorkArea -> WorkArea
+joinWorkArea wa1 wa2 = Tagged $ unTagged wa1 </> unTagged wa2
+(<//>) = joinWorkArea
 
 tarballs :: TrajArea -> IO [Tarball]
 tarballs tra = sort <$> globDir1 (compile _results_glob) (unTagged tra)
@@ -76,7 +79,7 @@ protomol tool = do
   
 
 
-testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa") (Tagged "/tmp")
+testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa/") (Tagged "/tmp")
         in do removeDirectoryRecursive "/tmp/wa"
               createDirectory "/tmp/wa"
               r <- runTool (protomol testrmsd) ti
