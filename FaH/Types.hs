@@ -70,30 +70,14 @@ runTool t = runReaderT . runReaderT (runErrorT t)
 
 type Traj a = ErrorT String (ReaderT Logger (ReaderT TrajInfo (ReaderT (Tool a) IO))) a
 
-
 runTraj :: Traj a -> Logger -> TrajInfo -> Tool a -> IO (Either String a)
 runTraj tr l tri = runReaderT (runReaderT (runReaderT (runErrorT tr) l) tri)
 
 
 
--- runTraj' :: Traj' a -> Logger -> TrajInfo -> Tool a
--- runTraj' l = runReaderT . runReaderT l
-
--- runTraj :: Traj' a -> Logger -> TrajInfo -> Logger -> ToolInfo -> IO (Either String a)
--- runTraj tr trlogger trinfo tlogger = runTool (runTraj' tr trlogger trinfo) tlogger
-
-
--- type Traj = StateT TrajInfo (ListT Tool)
--- runTraj :: Traj a -> TrajInfo -> ToolInfo -> IO (Either String [a], [String])
--- runTraj traj trinfo  = runTool (runListT (evalStateT traj trinfo))
-
--- runTraj = undefined
-
 class Log m where
     addLog :: String -> m ()
 
--- instance Log Tool where addLog s = toolLogger
--- instance Log Traj where addLog = fahLog
 
 instance Log Tool where
     addLog s = do l <- toolLogger
