@@ -31,16 +31,12 @@ _results_glob = "results-???.tar.bz2"
 addLog' = addLog . printf "[%s] %s" _name
 
 
-handle_tarball :: Tool a -> WorkArea -> Tarball -> Tool a
-handle_tarball tool wa tball = do
-  let name = takeFileName . dropExtension . dropExtension -- drop '.tar.bz2'
-      target = unTagged wa </> name tball
-
+handle_tarball :: Tool a -> FilePath -> Tarball -> Tool a
+handle_tarball tool target tball = do
   addLog' $ ((printf "handling %s" tball) :: String)
 
-  liftIO $ createDirectory target
+  liftIO $ createDirectoryIfMissing True target
   liftIO $ extract_tarbz2 tball target
-
 
   tool
 
@@ -51,26 +47,37 @@ tarballs :: TrajArea -> IO [Tarball]
 tarballs tra = sort <$> globDir1 (compile _results_glob) (unTagged tra)
 
 
+expand_dir wa = combine (unTagged wa) . takeFileName . dropExtension . dropExtension
+
 protomol :: Tool a -> Tool [a]
-protomol tool = do
-  addLog' "starting"
-  
+protomol tool = do 
   tinfo <- getToolInfo
+
+  addLog' $ (printf "starting run %d clone %d" (unTagged . run $ tinfo) (unTagged . clone $ tinfo) :: String)
+
   tarballs <- liftIO $ tarballs (trajArea tinfo)
 
   addLog' $ "tarballs: " ++ show tarballs
   addLog' $ "toolinfo: " ++ show tinfo
+
+
+  let target = expand_dir (workArea tinfo)
   
 
-  ret <- mapM (handle_tarball tool (workArea tinfo)) tarballs
+  ret <- mapM (\tb -> handle_tarball tool (target tb) tb)  tarballs
+
+  liftIO $ mapM_ (removeDirectoryRecursive . target) tarballs
+
 
   return ret
 
   
 
 
-testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa") (Tagged "/home/badi/Research/fah/test/data/PROJ10001/RUN808/CLONE1")
-        in do r <- runTool (protomol testrmsd) ti
+testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa") (Tagged "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001/RUN0/CLONE3")
+        in do removeDirectoryRecursive "/tmp/wa"
+              createDirectory "/tmp/wa"
+              r <- runTool (protomol testrmsd) ti
               mapM_ putStrLn (snd r)
 
 testrmsd = let ti = ToolInfo r c wa undefined 
