@@ -38,7 +38,7 @@ handle_tarball tool target tball = do
   addLog' $ ((printf "handling %s" tball) :: String)
 
   liftIO $ createDirectoryIfMissing True target
-  liftIO $ extract_tarbz2 tball target
+  liftIO $ sys_extract_tarbz2 tball target
 
   tool
 
