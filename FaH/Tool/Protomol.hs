@@ -33,6 +33,8 @@ addLog' = addLog . printf "[%s] %s" _name
 
 handle_tarball :: Tool a -> FilePath -> Tarball -> Tool a
 handle_tarball tool target tball = do
+  tinfo <- getToolInfo
+
   addLog' $ ((printf "handling %s" tball) :: String)
 
   liftIO $ createDirectoryIfMissing True target
@@ -74,7 +76,7 @@ protomol tool = do
   
 
 
-testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa") (Tagged "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001/RUN0/CLONE3")
+testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa") (Tagged "/tmp")
         in do removeDirectoryRecursive "/tmp/wa"
               createDirectory "/tmp/wa"
               r <- runTool (protomol testrmsd) ti
