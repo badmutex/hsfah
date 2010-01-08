@@ -1,86 +1,83 @@
 {-# LANGUAGE
   EmptyDataDecls
-  , FlexibleContexts
-  , FlexibleInstances
+  , NoMonomorphismRestriction
   , MultiParamTypeClasses
-  , Rank2Types
+  , TypeSynonymInstances
   #-}
 
-module FaH.Types where
+module FaH.Types ( Run, Clone
+                 , ProjArea, TrajArea, WorkArea
 
-import Data.Convertible
+                 , Message (..)
+                 , Log (..)
+
+                 , ToolInfo (..), TrajInfo (..)
+
+                 , Tool, Traj
+                 , runTool, runTraj
+
+                 , getToolInfo, throw, doTool
+
+                 ) where
+
+
+import Control.Concurrent (Chan)
+
+import Control.Monad.Error
+import Control.Monad.State
+import Control.Monad.Reader
+import Control.Monad.Writer
+import Control.Monad.List
+import Control.Monad.Identity
+
 import Data.Tagged
-
 
 data PRun
 data PClone
-data PFrame
 data PProjArea
 data PWorkArea
-data PTrajPath
-data PStructId
+data PTrajArea
 
-
--- in case these need to be change, alias them here
-type RunType = Int
+type RunType   = Int
 type CloneType = Int
 
--- I shouldn't be able to treat runs and clones as the same.
--- Same goes for the workarea/project paths
-type Run      = Tagged PRun Int
-type Clone    = Tagged PClone Int
-type Frame    = Tagged PFrame Integer
-type WorkArea = Tagged PWorkArea FilePath
-type ProjArea = Tagged PProjArea FilePath
-type TrajPath = Tagged PTrajPath FilePath
-type StructId = Tagged PStructId String
+type Run       = Tagged PRun RunType
+type Clone     = Tagged PClone CloneType
+type ProjArea  = Tagged PProjArea FilePath
+type WorkArea  = Tagged PWorkArea FilePath
+type TrajArea  = Tagged PTrajArea FilePath
 
+data Message a = Stop | Msg a
 
--- these are used to control the database interactions
-newtype TableCreate = TableCreate String deriving Show -- ^ passed to HDBC to create the table
-newtype DBName      = DBName String      deriving Show
-newtype TableName   = TableName String   deriving Show
-newtype ColName     = ColName String     deriving Show
-newtype ColDesc     = ColDesc String     deriving Show -- ^ used in the creation of a table
-newtype ColComment  = ColComment String  deriving Show
-newtype TableDesc   = TableDesc String   deriving Show -- ^ 'create table <name> ( <desc> )'"
-
--- | Used to choose either the sql 'MAX' or 'MIN' function in 'SELECT'
-data SqlOrd = Max | Min deriving Show
-
-
-instance Convertible b c => Convertible (Tagged a b) c where
-    safeConvert = safeConvert . unTagged
-
--- The info that a tool has access to
-data ToolInfo = ToolInfo {
-      run         :: Run
-    , clone       :: Clone
-    , workArea    :: WorkArea
-    , projectArea :: ProjArea
+data ToolInfo  = ToolInfo {
+      run      :: Run
+    , clone    :: Clone
+    , workArea :: WorkArea
+    , trajArea :: TrajArea
     } deriving Show
 
 
-type ErrorMsg = String
-type CatchError a = Either ErrorMsg a
-type Result = CatchError ()
+data TrajInfo = TrajInfo Run [Clone] ProjArea WorkArea deriving Show
 
-type Action = IO Result
+type Tool = ErrorT String (WriterT [String] (ReaderT ToolInfo IO))
+runTool :: Tool a -> ToolInfo -> IO (Either String a, [String])
+runTool t = runReaderT (runWriterT (runErrorT t))
 
-type Tool = ToolInfo -> Action
-
-class Apply a b c where apply :: a -> b -> c
-
-type Analyzer a = ToolInfo -> IO (CatchError a)
+type Traj = StateT TrajInfo (ListT Tool)
+runTraj :: Traj a -> TrajInfo -> ToolInfo -> IO (Either String [a], [String])
+runTraj traj trinfo  = runTool (runListT (evalStateT traj trinfo))
 
 
+class Log m where
+    addLog :: String -> m ()
+
+instance Log Tool where addLog = toolLog
+instance Log Traj where addLog = fahLog
 
 
-data ProjectParameters = ProjectParameters {
-      runs :: RunType
-    , clones :: CloneType
-    , location :: ProjArea
-    } deriving Show
+getToolInfo = ask
+toolLog s = tell [s]
+fahLog s = lift . lift . tell $ [s]
+throw = fail
 
-
-data Message a = Finish | Log a
+doTool = lift . lift
