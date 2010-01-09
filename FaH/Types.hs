@@ -13,6 +13,7 @@ module FaH.Types ( Run, Clone
 
                  , Message (..)
                  , Log (..)
+                 , Logger
 
                  , ToolInfo (..), TrajInfo (..)
 
@@ -96,30 +97,20 @@ instance Log Tool where
 
 
 
-logger :: Chan (Message String) -> IO ()
-logger chan = do
-  msg <- readChan chan
-  case msg of
-    Stop -> return ()
-    Msg m -> do putStrLn m
-                logger chan
+-- test1 = do
+--   chan <- newChan
+--   let tool :: Tool ()
+--       tool = addLog "tool"
+--       l = logging chan
+--   runTool tool l undefined
+--   writeChan chan Stop
+--   logger chan
 
-logging chan str = writeChan chan (Msg str)
+-- test2 = let tool = getToolInfo
+--             l = undefined
+--             ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
+--         in runTool tool l ti
 
-
-test1 = do
-  chan <- newChan
-  let tool :: Tool ()
-      tool = addLog "tool"
-      l = logging chan
-  runTool tool l undefined
-  writeChan chan Stop
-  logger chan
-
-test2 = let tool = getToolInfo
-            l = undefined
-            ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
-        in runTool tool l ti
 
 getToolInfo :: Tool ToolInfo
 getToolInfo = lift.lift $ ask

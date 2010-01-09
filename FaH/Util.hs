@@ -4,15 +4,11 @@ module FaH.Util where
 import FaH.Types
 
 
-import Control.Concurrent
-import Control.Monad
-import Control.Monad.State
-import Control.Monad.Reader
-import Control.Monad.Writer
-
 import Data.Tagged
 
 import System.FilePath ((</>))
+
+
 
 
 trajPath :: ProjArea -> Run -> Clone -> TrajArea
@@ -30,21 +26,12 @@ toolInfos (TrajInfo run clones projarea workarea) =
                               , trajArea = trajPath projarea run c
                               }
 
-ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
-trji = TrajInfo (Tagged 1) (map Tagged [0..5]) (Tagged "/tmp/pa") (Tagged "/tmp/wa")
 
-testtool :: Tool Int
-testtool = do
-  ti <- getToolInfo
-  addLog "testtool"
-  return . unTagged . clone $ ti
+-- ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
+-- trji = TrajInfo (Tagged 1) (map Tagged [0..5]) (Tagged "/tmp/pa") (Tagged "/tmp/wa")
 
-
-traj :: Tool Int -> Traj Int
-traj tool = do
-  tri <- get
-  addLog "traj"
-  doTool tool
-  
-
-testtraj = runTraj (traj testtool) trji ti
+-- testtool :: Tool Int
+-- testtool = do
+--   ti <- getToolInfo
+--   addLog "testtool"
+--   return . unTagged . clone $ ti
