@@ -17,6 +17,6 @@ logger chan = do
 logging chan str = writeChan chan (Msg str)
 
 
-newLogger :: IO Logger
+newLogger :: IO (Logger,IO ())
 newLogger = do chan <- newChan
-               return $ logging chan
+               return $ (logging chan, logger chan)

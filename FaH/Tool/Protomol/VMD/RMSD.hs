@@ -149,6 +149,12 @@ rmsd genParams removableFiles = do
 
 -- ---------------------------------------- --
 
+testlogger = let tool :: Tool ()
+                 tool = addLog "hello"
+             in do (l,rl) <- newLogger
+                   runTool tool (Tool l undefined)
+                   rl
+
 testrmsd = let ti = ToolInfo r c wa undefined 
                r = Tagged 1
                c = Tagged 2
@@ -164,7 +170,8 @@ testrmsd = let ti = ToolInfo r c wa undefined
                                    }
                genparams = genParams fileinfo
                remove ps = [script ps, outfile ps]
-           in do l <- newLogger
-                 runTool (rmsd genparams remove) l ti
+           in do (l,rl) <- newLogger
+                 runTool (rmsd genparams remove) (Tool l ti)
+                 rl
 
 -- ---------------------------------------- --
