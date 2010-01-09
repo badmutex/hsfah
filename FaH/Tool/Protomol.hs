@@ -83,10 +83,11 @@ protomol tool = do
 testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa/") (Tagged "/home/badi/Research/fah/test/data/PROJ10000/RUN0/CLONE0")
         in do removeDirectoryRecursive "/tmp/hsfah/wa"
               createDirectory "/tmp/hsfah/wa"
-              
-              -- r <- runTool (protomol testrmsd) (Tool (l chan) ti)
+              (l,_,chan) <- newLogger
+              r <- runTool (protomol testrmsd) (Tool l ti)
 
               -- mapM_ putStrLn (snd r)
+              return ()
 
 testrmsd = let ti = ToolInfo r c wa undefined 
                r = Tagged 1
