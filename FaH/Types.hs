@@ -16,11 +16,13 @@ module FaH.Types ( Run, Clone
                  , Logger
 
                  , ToolInfo (..), TrajInfo (..)
+                 , ToolReader (..)
 
                  , Tool, Traj
                  , runTool, runTraj
 
                  , getToolInfo, throw, doTool
+                 , useToolInfo
 
                  ) where
 
@@ -63,13 +65,18 @@ data ToolInfo  = ToolInfo {
     , trajArea :: TrajArea
     } deriving Show
 
+data ToolReader = Tool {
+      toolLogger :: Logger
+    , toolInfo :: ToolInfo
+    }
+
 
 data TrajInfo = TrajInfo Run [Clone] ProjArea WorkArea deriving Show
 
-type Tool = ErrorT String (ReaderT Logger (ReaderT ToolInfo IO))
+type Tool = ErrorT String (ReaderT ToolReader IO)
 
-runTool :: Tool a -> Logger -> ToolInfo -> IO (Either String a)
-runTool t = runReaderT . runReaderT (runErrorT t)
+runTool :: Tool a -> ToolReader -> IO (Either String a)
+runTool t = runReaderT (runErrorT t)
 
 
 type Traj' = ErrorT String (ReaderT Logger (ReaderT TrajInfo (ReaderT (Tool ()) IO)))
@@ -90,7 +97,7 @@ class Log m where
 
 
 instance Log Tool where
-    addLog s = do l <- toolLogger
+    addLog s = do l <- toolLogger `liftM` ask
                   liftIO $ l s
 
 
@@ -113,10 +120,11 @@ instance Log Tool where
 
 
 getToolInfo :: Tool ToolInfo
-getToolInfo = lift.lift $ ask
+getToolInfo = toolInfo `liftM` ask
 
-toolLogger :: Tool Logger
-toolLogger = lift ask
+useToolInfo :: (ToolInfo -> ToolInfo) -> Tool a -> Tool a
+useToolInfo delta = local (\tr -> tr { toolInfo = delta (toolInfo tr) })
+
 
 trajLogger :: Traj' Logger
 trajLogger = lift $ ask

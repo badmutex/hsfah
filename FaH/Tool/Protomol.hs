@@ -41,15 +41,8 @@ handle_tarball tool target tball = do
   liftIO $ createDirectoryIfMissing True target
   liftIO $ sys_extract_tarbz2 tball target
 
-  tool
+  useToolInfo (\ti -> ti { workArea = workArea ti <//> Tagged target }) tool
 
-  
-  -- local (\ti -> ti {workArea = workArea ti <//> Tagged target}) $ tool
-
-t :: Tool a -> Tool b
-t tool = do
-    ti <- getToolInfo
-    mapReaderT (\r -> local (\ti -> ti {workArea = undefined}) r) tool
 
 joinWorkArea :: WorkArea -> WorkArea -> WorkArea
 joinWorkArea wa1 wa2 = Tagged $ unTagged wa1 </> unTagged wa2
@@ -86,27 +79,27 @@ protomol tool = do
   
 
 
--- testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa/") (Tagged "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001/RUN0/CLONE0")
---         in do removeDirectoryRecursive "/tmp/wa"
---               createDirectory "/tmp/wa"
---               l <- newLogger
---               r <- runTool (protomol testrmsd) l ti
---               print r
---               -- mapM_ putStrLn (snd r)
+testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa/") (Tagged "/home/badi/Research/fah/test/data/PROJ10000/RUN0/CLONE0")
+        in do removeDirectoryRecursive "/tmp/hsfah/wa"
+              createDirectory "/tmp/hsfah/wa"
+              l <- newLogger
+              r <- runTool (protomol testrmsd) (Tool l ti)
+              print r
+              -- mapM_ putStrLn (snd r)
 
--- testrmsd = let ti = ToolInfo r c wa undefined 
---                r = Tagged 1
---                c = Tagged 2
---                wa = Tagged "/tmp/test"
---                fileinfo = FileInfo { vmd_bin = "vmd"
---                                    , psfpath = "/tmp/test/ww.psf"
---                                    , foldedpath = "/tmp/test/ww_folded.pdb"
---                                    , scriptname = "rmsd.tcl"
---                                    , resultsname = "rmsd.out"
---                                    , dcdname = "ww.dcd"
---                                    , atomselect = Tagged "all"
---                                    , screenoutput = DevNull
---                                    }
---                genparams = genParams fileinfo
---                remove ps = [script ps, outfile ps]
---            in (rmsd genparams remove)
+testrmsd = let ti = ToolInfo r c wa undefined 
+               r = Tagged 1
+               c = Tagged 2
+               wa = Tagged "/tmp/hsfah/wa"
+               fileinfo = FileInfo { vmd_bin = "vmd"
+                                   , psfpath = "/tmp/hsfah/ww.psf"
+                                   , foldedpath = "/tmp/hsfah/ww_folded.pdb"
+                                   , scriptname = "rmsd.tcl"
+                                   , resultsname = "rmsd.out"
+                                   , dcdname = "ww.dcd"
+                                   , atomselect = Tagged "all"
+                                   , screenoutput = DevNull
+                                   }
+               genparams = genParams fileinfo
+               remove ps = [script ps, outfile ps]
+           in do rmsd genparams remove
