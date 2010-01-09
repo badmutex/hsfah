@@ -3,6 +3,9 @@
   , NoMonomorphismRestriction
   , MultiParamTypeClasses
   , TypeSynonymInstances
+  , ExistentialQuantification
+  , RankNTypes
+  , FlexibleContexts
   #-}
 
 module FaH.Types ( Run, Clone
@@ -10,18 +13,21 @@ module FaH.Types ( Run, Clone
 
                  , Message (..)
                  , Log (..)
+                 , Logger
 
                  , ToolInfo (..), TrajInfo (..)
+                 , ToolReader (..)
 
                  , Tool, Traj
                  , runTool, runTraj
 
                  , getToolInfo, throw, doTool
+                 , useToolInfo
 
                  ) where
 
 
-import Control.Concurrent (Chan)
+import Control.Concurrent
 
 import Control.Monad.Error
 import Control.Monad.State
@@ -47,6 +53,8 @@ type ProjArea  = Tagged PProjArea FilePath
 type WorkArea  = Tagged PWorkArea FilePath
 type TrajArea  = Tagged PTrajArea FilePath
 
+type Logger    = String -> IO ()
+
 data Message a = Stop | Msg a
 
 data ToolInfo  = ToolInfo {
@@ -56,26 +64,61 @@ data ToolInfo  = ToolInfo {
     , trajArea :: TrajArea
     } deriving Show
 
+data ToolReader = Tool {
+      toolLogger :: Logger
+    , toolInfo :: ToolInfo
+    }
+
 
 data TrajInfo = TrajInfo Run [Clone] ProjArea WorkArea deriving Show
 
-type Tool = ErrorT String (WriterT [String] (ReaderT ToolInfo IO))
-runTool :: Tool a -> ToolInfo -> IO (Either String a, [String])
-runTool t = runReaderT (runWriterT (runErrorT t))
+type Tool = ErrorT String (ReaderT ToolReader IO)
 
-type Traj = StateT TrajInfo (ListT Tool)
-runTraj :: Traj a -> TrajInfo -> ToolInfo -> IO (Either String [a], [String])
-runTraj traj trinfo  = runTool (runListT (evalStateT traj trinfo))
+runTool :: Tool a -> ToolReader -> IO (Either String a)
+runTool t = runReaderT (runErrorT t)
+
+
+type Traj' = ErrorT String (ReaderT Logger (ReaderT TrajInfo (ReaderT (Tool ()) IO)))
+
+runTraj' :: Traj a -> Logger -> TrajInfo -> Tool a -> IO (Either String a)
+runTraj' tr l tri = runReaderT (runReaderT (runReaderT (runErrorT tr) l) tri)
+
+
+type Traj a = ErrorT String (ReaderT Logger (ReaderT TrajInfo (ReaderT (Tool a) IO))) a
+
+runTraj :: Traj a -> Logger -> TrajInfo -> Tool a -> IO (Either String a)
+runTraj tr l tri = runReaderT (runReaderT (runReaderT (runErrorT tr) l) tri)
+
+
 
 
 class Log m where
     addLog :: String -> m ()
 
-instance Log Tool where addLog = toolLog
-instance Log Traj where addLog = fahLog
+
+instance Log Tool where
+    addLog s = do l <- toolLogger `liftM` ask
+                  liftIO $ l s
 
 
-getToolInfo = ask
+
+
+
+getToolInfo :: Tool ToolInfo
+getToolInfo = toolInfo `liftM` ask
+
+useToolInfo :: (ToolInfo -> ToolInfo) -> Tool a -> Tool a
+useToolInfo delta = local (\tr -> tr { toolInfo = delta (toolInfo tr) })
+
+
+trajLogger :: Traj' Logger
+trajLogger = lift $ ask
+
+trajLog :: String -> Traj' ()
+trajLog s = do l <- trajLogger
+               liftIO $ l s
+
+
 toolLog s = tell [s]
 fahLog s = lift . lift . tell $ [s]
 throw = fail

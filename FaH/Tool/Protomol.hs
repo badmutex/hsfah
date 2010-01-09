@@ -5,6 +5,8 @@
 module FaH.Tool.Protomol where
 
 import FaH.Tool.Protomol.VMD.RMSD hiding (_name,addLog',testrmsd)
+import Control.Concurrent
+import FaH.Logging
 
 
 import FaH.Types
@@ -30,7 +32,7 @@ _name = "FaH.Tool.Protomol"
 _results_glob = "results-???.tar.bz2"
 addLog' = addLog . printf "[%s] %s" _name
 
-
+llocal = lift local
 handle_tarball :: Tool a -> FilePath -> Tarball -> Tool a
 handle_tarball tool target tball = do
   tinfo <- getToolInfo
@@ -40,8 +42,7 @@ handle_tarball tool target tball = do
   liftIO $ createDirectoryIfMissing True target
   liftIO $ sys_extract_tarbz2 tball target
 
-  local (\ti -> ti {workArea = workArea ti <//> Tagged target}) tool
-
+  useToolInfo (\ti -> ti { workArea = workArea ti <//> Tagged target }) tool
 
 
 joinWorkArea :: WorkArea -> WorkArea -> WorkArea
@@ -79,20 +80,22 @@ protomol tool = do
   
 
 
-testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa/") (Tagged "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001/RUN0/CLONE0")
-        in do removeDirectoryRecursive "/tmp/wa"
-              createDirectory "/tmp/wa"
-              r <- runTool (protomol testrmsd) ti
-              print r
+testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa/") (Tagged "/home/badi/Research/fah/test/data/PROJ10000/RUN0/CLONE0")
+        in do removeDirectoryRecursive "/tmp/hsfah/wa"
+              createDirectory "/tmp/hsfah/wa"
+              (l,_,chan) <- newLogger
+              r <- runTool (protomol testrmsd) (Tool l ti)
+
               -- mapM_ putStrLn (snd r)
+              return ()
 
 testrmsd = let ti = ToolInfo r c wa undefined 
                r = Tagged 1
                c = Tagged 2
-               wa = Tagged "/tmp/test"
+               wa = Tagged "/tmp/hsfah/wa"
                fileinfo = FileInfo { vmd_bin = "vmd"
-                                   , psfpath = "/tmp/test/ww.psf"
-                                   , foldedpath = "/tmp/test/ww_folded.pdb"
+                                   , psfpath = "/tmp/hsfah/ww.psf"
+                                   , foldedpath = "/tmp/hsfah/ww_folded.pdb"
                                    , scriptname = "rmsd.tcl"
                                    , resultsname = "rmsd.out"
                                    , dcdname = "ww.dcd"
@@ -101,4 +104,4 @@ testrmsd = let ti = ToolInfo r c wa undefined
                                    }
                genparams = genParams fileinfo
                remove ps = [script ps, outfile ps]
-           in (rmsd genparams remove)
+           in do rmsd genparams remove
