@@ -104,21 +104,6 @@ instance Log Tool where
 
 
 
--- test1 = do
---   chan <- newChan
---   let tool :: Tool ()
---       tool = addLog "tool"
---       l = logging chan
---   runTool tool l undefined
---   writeChan chan Stop
---   logger chan
-
--- test2 = let tool = getToolInfo
---             l = undefined
---             ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
---         in runTool tool l ti
-
-
 getToolInfo :: Tool ToolInfo
 getToolInfo = toolInfo `liftM` ask
 

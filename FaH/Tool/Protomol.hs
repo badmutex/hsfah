@@ -5,6 +5,7 @@
 module FaH.Tool.Protomol where
 
 import FaH.Tool.Protomol.VMD.RMSD hiding (_name,addLog',testrmsd)
+import Control.Concurrent
 import FaH.Logging
 
 
@@ -82,9 +83,9 @@ protomol tool = do
 testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa/") (Tagged "/home/badi/Research/fah/test/data/PROJ10000/RUN0/CLONE0")
         in do removeDirectoryRecursive "/tmp/hsfah/wa"
               createDirectory "/tmp/hsfah/wa"
-              l <- newLogger
-              r <- runTool (protomol testrmsd) (Tool l ti)
-              print r
+              
+              -- r <- runTool (protomol testrmsd) (Tool (l chan) ti)
+
               -- mapM_ putStrLn (snd r)
 
 testrmsd = let ti = ToolInfo r c wa undefined 

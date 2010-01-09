@@ -3,7 +3,8 @@ module FaH.Logging where
 
 import FaH.Types
 
-import Control.Concurrent (Chan, newChan, writeChan, readChan)
+import Control.Concurrent (ThreadId, Chan, newChan, writeChan, readChan, forkIO,)
+import Control.Monad (forever)
 
 
 logger :: Chan (Message String) -> IO ()
@@ -17,6 +18,19 @@ logger chan = do
 logging chan str = writeChan chan (Msg str)
 
 
-newLogger :: IO (Logger,IO ())
+newLogger :: IO (Logger, ThreadId, Chan (Message String))
 newLogger = do chan <- newChan
-               return $ (logging chan, logger chan)
+               tid <- forkIO . forever $ logger chan
+               return $ (logging chan, tid, chan)
+
+finish :: Chan (Message a) -> IO ()
+finish chan = writeChan chan Stop
+
+
+
+testl = let tool :: Tool ()
+            tool = mapM_ addLog ["hello","world"]
+        in do (l,tid, chan) <- newLogger
+              r <- runTool tool (Tool l undefined)
+              l $ show r
+              writeChan chan Stop
