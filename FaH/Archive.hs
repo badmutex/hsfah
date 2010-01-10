@@ -10,9 +10,9 @@ import Text.Printf            (printf)
 import System.Process
 import System.Exit
 
-import qualified Codec.Archive.Tar       as Tar
-import qualified Codec.Archive.Tar.Check as Tar
-import qualified Data.ByteString.Lazy    as BS
+-- import qualified Codec.Archive.Tar       as Tar
+-- import qualified Codec.Archive.Tar.Check as Tar
+-- import qualified Data.ByteString.Lazy    as BS
 
 
 type Tarball   = FilePath
@@ -28,6 +28,7 @@ sys_extract_tarbz2 tarball targetdir = do
     ExitFailure c -> fail $ printf "Command \"%s\" failed with %d" cmd c
 
 
+{-
 extract_tarbz2 :: Tarball -> TargetDir -> IO ()
 extract_tarbz2 tarball targetdir = do
   entries <- Tar.read . decompress <$> BS.readFile tarball
@@ -71,5 +72,4 @@ f = "/tmp/results-000.tar.bz2"
 test = extract_tarbz2 f "/tmp"
           
 
-
-
+-}
