@@ -7,9 +7,10 @@ module FaH.Tool.Protomol.VMD.RMSD where
 
 import FaH.Types
 import FaH.Logging
+import FaH.Exceptions
 
-import Control.Monad.Error
-import Control.Monad.State
+import Control.Concurrent
+import Control.Monad.Trans (liftIO)
 
 import Data.Tagged
 import Data.List (intercalate)
@@ -56,6 +57,11 @@ mkCmd p = let cmd = printf "%s -dispdev text -psf %s -dcd %s -f %s < %s %s"
 runCmd :: Cmd -> IO ExitCode
 runCmd cmd = do h <- runCommand $ unTagged cmd
                 waitForProcess h
+
+
+cmdFailed :: Cmd -> ExitCode -> Either String ()
+cmdFailed _ ExitSuccess = Right ()
+cmdFailed cmd (ExitFailure ec) = Left $ printf "%s failed with %d" (unTagged cmd) ec
 
 rmsd_results :: FilePath -> IO [Double]
 rmsd_results p = (map read . words) `fmap` readFile p
@@ -130,15 +136,11 @@ rmsd genParams removableFiles = do
 
 
 
-  liftIO $ save_script (script params) 
-         $ rmsdScript  (outfile params) atomsel
-  liftIO $ runCmd . mkCmd
-         $ params
+  safeLiftIO   $ save_script (script params) (rmsdScript (outfile params) atomsel)
+  liftExitCode $ runCmd cmd
 
-  results <- liftIO $ rmsd_results (outfile params)
-
+  results <- safeLiftIO $ rmsd_results (outfile params)
   liftIO . mapM_ removeLink $ removableFiles params
-
   addLog' "sucess!"
   return results
 
@@ -171,7 +173,9 @@ testrmsd = let ti = ToolInfo r c wa undefined
                genparams = genParams fileinfo
                remove ps = [script ps, outfile ps]
            in do (l,tid,chan) <- newLogger
-                 runTool (rmsd genparams remove) (Tool l ti)
+                 res <- runTool (rmsd genparams remove) (Tool l ti)
+                 threadDelay 100000
+                 print res
 
 
 -- ---------------------------------------- --

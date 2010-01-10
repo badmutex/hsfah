@@ -4,15 +4,34 @@ synopsis:            <Project description>
 description:         <Project description>
 category:            Codec
 license:             BSD3
-license-file:        LICENSE
+
 author:              Badi' Abdul-Wahid
 maintainer:          abdulwahidc@gmail.com
 build-type:          Simple
-ghc-options:         
 
+cabal-version :     >= 1.6
 
 library
-    build-depends:       base
+    build-depends:      
+                        base > 4,
+                        bytestring >= 0.9.1.0,
+                        process >= 1.0.1.0,
+                        bzlib >= 0.5,
+                        mtl >= 1.1.0.0,
+                        directory >= 1,
+                        filepath >= 1.1.0.0,
+                        containers >= 0.2.0.1,
+                        dlist >= 0.5,
+                        tagged >= 0.0,
+                        unix >= 2.3.2.0
     exposed-modules:
-                         FaH.Types
-                         FaH.Tool
+                        FaH.Archive
+                        FaH.Exceptions
+                        FaH.Logging
+                        FaH.Tool.Protomol
+                        FaH.Tool.Protomol.VMD.RMSD
+                        FaH.Types
+                        FaH.Util
+
+
+                        FaH.RunMapper

@@ -12,6 +12,7 @@ import FaH.Logging
 import FaH.Types
 import FaH.Archive
 import FaH.Util
+import FaH.Exceptions
 
 import Control.Applicative ((<$>))
 import Control.Monad.Error
@@ -39,8 +40,8 @@ handle_tarball tool target tball = do
 
   addLog' $ ((printf "handling %s" tball) :: String)
 
-  liftIO $ createDirectoryIfMissing True target
-  liftIO $ sys_extract_tarbz2 tball target
+  safeLiftIO $ createDirectoryIfMissing True target
+  safeLiftIO $ sys_extract_tarbz2 tball target
 
   useToolInfo (\ti -> ti { workArea = workArea ti <//> Tagged target }) tool
 
@@ -58,21 +59,21 @@ expand_dir wa = combine (unTagged wa) . takeFileName . dropExtension . dropExten
 protomol :: Tool a -> Tool [a]
 protomol tool = do 
   tinfo <- getToolInfo
+  r <- getRunVal
+  c <- getCloneVal
 
-  addLog' $ (printf "starting run %d clone %d" (unTagged . run $ tinfo) (unTagged . clone $ tinfo) :: String)
+  addLog' $ (printf "starting run %d clone %d" r c :: String)
 
-  tarballs <- liftIO $ tarballs (trajArea tinfo)
+  tarballs <- safeLiftIO $ tarballs (trajArea tinfo)
 
-  addLog' $ "tarballs: " ++ show tarballs
-  addLog' $ "toolinfo: " ++ show tinfo
-
+  mapM_ (addLog' . (\tb -> printf "Run %d Clone %d: Found %s " r c (takeFileName tb) :: String) . show) tarballs
 
   let target = expand_dir (workArea tinfo)
   
 
   ret <- mapM (\tb -> handle_tarball tool (target tb) tb)  tarballs
 
-  liftIO $ mapM_ (removeDirectoryRecursive . target) tarballs
+  safeLiftIO $ mapM_ (removeDirectoryRecursive . target) tarballs
 
 
   return ret
@@ -85,9 +86,8 @@ testp = let ti = ToolInfo (Tagged 808) (Tagged 1) (Tagged "/tmp/wa/") (Tagged "/
               createDirectory "/tmp/hsfah/wa"
               (l,_,chan) <- newLogger
               r <- runTool (protomol testrmsd) (Tool l ti)
-
-              -- mapM_ putStrLn (snd r)
-              return ()
+              threadDelay 100000
+              return r
 
 testrmsd = let ti = ToolInfo r c wa undefined 
                r = Tagged 1
