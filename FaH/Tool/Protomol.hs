@@ -59,12 +59,14 @@ expand_dir wa = combine (unTagged wa) . takeFileName . dropExtension . dropExten
 protomol :: Tool a -> Tool [a]
 protomol tool = do 
   tinfo <- getToolInfo
+  r <- getRunVal
+  c <- getCloneVal
 
-  addLog' $ (printf "starting run %d clone %d" (unTagged . run $ tinfo) (unTagged . clone $ tinfo) :: String)
+  addLog' $ (printf "starting run %d clone %d" r c :: String)
 
   tarballs <- safeLiftIO $ tarballs (trajArea tinfo)
 
-  mapM_ (addLog' . (++) "Found " . takeFileName . show) tarballs
+  mapM_ (addLog' . (\tb -> printf "Run %d Clone %d: Found %s " r c (takeFileName tb) :: String) . show) tarballs
 
   let target = expand_dir (workArea tinfo)
   

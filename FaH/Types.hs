@@ -22,11 +22,12 @@ module FaH.Types ( Run, Clone
                  , runTool, runTraj
 
                  , getToolInfo, doTool
-                 , useToolInfo
+                 , useToolInfo, getToolInfoVal, getRunVal, getCloneVal
 
                  ) where
 
 
+import Control.Applicative ((<$>))
 import Control.Concurrent
 
 import Control.Monad.Error
@@ -109,6 +110,15 @@ getToolInfo = toolInfo `liftM` ask
 
 useToolInfo :: (ToolInfo -> ToolInfo) -> Tool a -> Tool a
 useToolInfo delta = local (\tr -> tr { toolInfo = delta (toolInfo tr) })
+
+getToolInfoVal :: (ToolInfo -> Tagged a b) -> Tool b
+getToolInfoVal f = unTagged . f <$> getToolInfo
+
+getRunVal :: Tool RunType
+getRunVal = getToolInfoVal run
+
+getCloneVal :: Tool CloneType
+getCloneVal = getToolInfoVal clone
 
 
 trajLogger :: Traj' Logger
