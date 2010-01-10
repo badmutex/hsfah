@@ -136,23 +136,13 @@ rmsd genParams removableFiles = do
 
 
 
-  safeLiftIO $ save_script (script params) (rmsdScript  (outfile params) atomsel)
-  safeLiftIO $ runCmd cmd
-
-  safeLiftIO $ readFile "/tmp/bad"
+  safeLiftIO   $ save_script (script params) (rmsdScript (outfile params) atomsel)
+  liftExitCode $ runCmd cmd
 
   results <- safeLiftIO $ rmsd_results (outfile params)
-  safeLiftIO . mapM_ removeLink $ removableFiles params
+  liftIO . mapM_ removeLink $ removableFiles params
   addLog' "sucess!"
   return results
-
-  -- case failOrSuccess of
-  --   Left msg  -> fail msg
-  --   otherwise -> do results <- liftIO $ rmsd_results (outfile params)
-  --                   liftIO . mapM_ removeLink $ removableFiles params
-  --                   addLog' "sucess!"
-  --                   return results
-
 
 -- ======================================== --
 

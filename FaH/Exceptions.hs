@@ -2,7 +2,9 @@
   NoMonomorphismRestriction
   #-}
 
-module FaH.Exceptions ( safeLiftIO ) where
+module FaH.Exceptions ( safeLiftIO
+                      , liftExitCode
+                      ) where
 
 
 import FaH.Types
@@ -14,16 +16,25 @@ import Control.Concurrent
 import Control.Monad.Trans
 import Control.Monad.Reader
 import Control.Monad.Error
+
+import System.Exit
 import qualified System.IO.Error as IO
 
+import Text.Printf
 
 
 safeLiftIO = liftFail . liftIO . wrapIO
 
 
+liftExitCode :: MonadIO m => IO ExitCode -> m ExitCode
+liftExitCode io = do code <- safeLiftIO io
+                     case code of
+                       ExitFailure c -> fail $ printf "failed with %d" c
+                       otherwise     -> return code
+
+
 justIO :: IOException -> Maybe String
 justIO e@(_) = Just $ show e
-
 
 wrapIO :: IO a -> IO (Either String a)
 wrapIO = tryJust justIO
