@@ -21,7 +21,7 @@ module FaH.Types ( Run, Clone
                  , Tool, Traj
                  , runTool, runTraj
 
-                 , getToolInfo, throw, doTool
+                 , getToolInfo, doTool
                  , useToolInfo
 
                  ) where
@@ -122,6 +122,6 @@ trajLog s = do l <- trajLogger
 
 toolLog s = tell [s]
 fahLog s = lift . lift . tell $ [s]
-throw = fail
+-- throw = fail
 
 doTool = lift . lift
