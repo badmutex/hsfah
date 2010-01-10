@@ -6,15 +6,15 @@ import FaH.Exceptions
 import FaH.Util
 import FaH.Logging
 
-
 import FaH.Tool.Protomol
 import FaH.Tool.Protomol.VMD.RMSD
-
 
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Tagged
+
+import System.Random
 
 
 
@@ -36,13 +36,17 @@ getReaders = do
 
 
 tester = do (l,_,chan) <- newLogger
-            let runinfo = RunInfo (Tagged 0) (map Tagged [0..7]) testProjArea testWorkArea
+            let runinfo = RunInfo (Tagged 0) (map Tagged [5..7]) testProjArea testWorkArea
                 testProjArea = Tagged "/home/badi/Research/fah/tmp"
                 testWorkArea = Tagged "/tmp/hsfah/wa"
                 reader = RunMapper l runinfo theTool
             
             res <- runRunMapper runMapper reader
             l $ show res
+
+
+randomFail :: IO Bool
+randomFail = getStdRandom random
 
 
 theTool :: Tool ()

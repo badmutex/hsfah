@@ -4,6 +4,7 @@
 
 module FaH.Exceptions ( safeLiftIO
                       , liftExitCode
+                      , testFail
                       ) where
 
 
@@ -31,6 +32,9 @@ liftExitCode io = do code <- safeLiftIO io
                      case code of
                        ExitFailure c -> fail $ printf "failed with %d" c
                        otherwise     -> return code
+
+testFail (ExitFailure c) = True
+testFail c = False
 
 
 justIO :: IOException -> Maybe String
