@@ -17,8 +17,8 @@ trajPath (Tagged wa)
          (Tagged c) = Tagged $ wa </> "RUN" ++ show r </> "CLONE" ++ show c
 
 
-toolInfos :: TrajInfo -> [ToolInfo]
-toolInfos (TrajInfo run clones projarea workarea) =
+toolInfos :: RunInfo -> [ToolInfo]
+toolInfos (RunInfo run clones projarea workarea) =
     map mk clones
         where mk c = ToolInfo { run = run
                               , clone = c

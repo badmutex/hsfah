@@ -15,14 +15,14 @@ module FaH.Types ( Run, Clone
                  , Log (..)
                  , Logger
 
-                 , ToolInfo (..), TrajInfo (..)
-                 , ToolReader (..)
+                 , ToolInfo (..), RunInfo (..)
+                 , ToolReader (..), RunMapperReader
 
-                 , Tool, Traj
-                 , runTool, runTraj
+                 , Tool, RunMapper
+                 , runTool, runRunMapper
 
-                 , getToolInfo, doTool
-                 , useToolInfo, getToolInfoVal, getRunVal, getCloneVal
+                 , getToolInfo, useToolInfo
+                 , getToolInfoVal, getRunVal, getCloneVal
 
                  ) where
 
@@ -72,7 +72,14 @@ data ToolReader = Tool {
     }
 
 
-data TrajInfo = TrajInfo Run [Clone] ProjArea WorkArea deriving Show
+data RunInfo = RunInfo Run [Clone] ProjArea WorkArea deriving Show
+
+
+data RunMapperReader = RunMapper {
+      runLogger :: Logger
+    , runInfo :: RunInfo
+    , tool :: Tool ()
+    }
 
 type Tool = ErrorT String (ReaderT ToolReader IO)
 
@@ -80,16 +87,12 @@ runTool :: Tool a -> ToolReader -> IO (Either String a)
 runTool t = runReaderT (runErrorT t)
 
 
-type Traj' = ErrorT String (ReaderT Logger (ReaderT TrajInfo (ReaderT (Tool ()) IO)))
+type RunMapper = ErrorT String (ReaderT RunMapperReader IO)
 
-runTraj' :: Traj a -> Logger -> TrajInfo -> Tool a -> IO (Either String a)
-runTraj' tr l tri = runReaderT (runReaderT (runReaderT (runErrorT tr) l) tri)
+runRunMapper :: RunMapper a -> RunMapperReader -> IO (Either String a)
+runRunMapper tr = runReaderT (runErrorT tr)
 
 
-type Traj a = ErrorT String (ReaderT Logger (ReaderT TrajInfo (ReaderT (Tool a) IO))) a
-
-runTraj :: Traj a -> Logger -> TrajInfo -> Tool a -> IO (Either String a)
-runTraj tr l tri = runReaderT (runReaderT (runReaderT (runErrorT tr) l) tri)
 
 
 
@@ -97,10 +100,15 @@ class Log m where
     addLog :: String -> m ()
 
 
-instance Log Tool where
-    addLog s = do l <- toolLogger `liftM` ask
-                  liftIO $ l s
 
+askAddLog f s = do l <- f <$> ask
+                   liftIO $ l s
+
+instance Log Tool where
+    addLog s = askAddLog toolLogger s
+
+instance Log RunMapper where
+    addLog s = askAddLog runLogger s
 
 
 
@@ -121,17 +129,4 @@ getCloneVal :: Tool CloneType
 getCloneVal = getToolInfoVal clone
 
 
-trajLogger :: Traj' Logger
-trajLogger = lift $ ask
 
-trajLog :: String -> Traj' ()
-trajLog s = do l <- trajLogger
-               liftIO $ l s
-
-
-
-toolLog s = tell [s]
-fahLog s = lift . lift . tell $ [s]
--- throw = fail
-
-doTool = lift . lift
