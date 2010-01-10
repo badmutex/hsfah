@@ -56,14 +56,14 @@ test :: IO (Either String String)
 test = tryJust justIO
                (readFile "/tmp/ok")
 
-tool :: Tool String
-tool = do addLog "running"
-          safeLiftIO bad
+testtool :: Tool String
+testtool = do addLog "running"
+              safeLiftIO bad
 
 
 
 testf = do (l,_,chan) <- newLogger
-           r <- runTool tool (Tool l undefined)
+           r <- runTool testtool (Tool l undefined)
            threadDelay 100000
            print r
            finish chan

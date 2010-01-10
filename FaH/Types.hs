@@ -16,13 +16,14 @@ module FaH.Types ( Run, Clone
                  , Logger
 
                  , ToolInfo (..), RunInfo (..)
-                 , ToolReader (..), RunMapperReader
+                 , ToolReader (..), RunMapperReader (..)
 
                  , Tool, RunMapper
                  , runTool, runRunMapper
 
                  , getToolInfo, useToolInfo
                  , getToolInfoVal, getRunVal, getCloneVal
+                 , getRunInfo, getTool
 
                  ) where
 
@@ -128,5 +129,12 @@ getRunVal = getToolInfoVal run
 getCloneVal :: Tool CloneType
 getCloneVal = getToolInfoVal clone
 
+
+getRunInfo :: RunMapper RunInfo
+getRunInfo = runInfo <$> ask
+
+
+getTool :: RunMapper (Tool ())
+getTool = tool <$> ask
 
 
