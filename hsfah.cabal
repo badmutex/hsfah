@@ -23,7 +23,9 @@ library
                         containers >= 0.2.0.1,
                         dlist >= 0.5,
                         tagged >= 0.0,
-                        unix >= 2.3.2.0
+                        unix >= 2.3.2.0,
+                        MissingH >= 1.1.0.1,
+                        random >= 1.0.0.1
     exposed-modules:
                         FaH.Archive
                         FaH.Exceptions
@@ -32,6 +34,4 @@ library
                         FaH.Tool.Protomol.VMD.RMSD
                         FaH.Types
                         FaH.Util
-
-
                         FaH.RunMapper

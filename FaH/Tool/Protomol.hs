@@ -24,7 +24,7 @@ import Data.List (sort)
 import Data.Tagged
 
 import System.FilePath
-import System.FilePath.Glob
+import System.Path.Glob
 import System.Directory
 
 import Text.Printf
@@ -51,7 +51,7 @@ joinWorkArea wa1 wa2 = Tagged $ unTagged wa1 </> unTagged wa2
 (<//>) = joinWorkArea
 
 tarballs :: TrajArea -> IO [Tarball]
-tarballs tra = sort <$> globDir1 (compile _results_glob) (unTagged tra)
+tarballs tra = sort <$> glob (unTagged tra </> _results_glob)
 
 
 expand_dir wa = combine (unTagged wa) . takeFileName . dropExtension . dropExtension
