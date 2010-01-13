@@ -9,14 +9,9 @@ module FaH.Exceptions ( safeLiftIO
 
 
 import FaH.Types
-import FaH.Logging
 
 import Control.Exception
-import Control.Concurrent
-
 import Control.Monad.Trans
-import Control.Monad.Reader
-import Control.Monad.Error
 
 import System.Exit
 import qualified System.IO.Error as IO
@@ -47,30 +42,3 @@ liftFail :: MonadIO m => m (Either String a) -> m a
 liftFail m  = m >>= lifter
     where lifter (Left msg) = fail msg
           lifter (Right v)  = return v
-
-
-
-
-
-
-bad = readFile "/tmp/foo"
-ok  = readFile "/tmp/ok"
-
-test :: IO (Either String String)
-test = tryJust justIO
-               (readFile "/tmp/ok")
-
-testtool :: Tool String
-testtool = do addLog "running"
-              safeLiftIO bad
-
-
-
-testf = do (l,_,chan) <- newLogger
-           r <- runTool testtool (Tool l undefined)
-           threadDelay 100000
-           print r
-           finish chan
-
--- ErrorT String (ReaderT ToolReader IO) String
--- ErrorT String (ReaderT ToolReader IO) (Either String String)
