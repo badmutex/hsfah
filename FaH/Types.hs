@@ -17,6 +17,8 @@ module FaH.Types ( Run, Clone
 
                  , ToolInfo (..), RunInfo (..)
                  , ToolReader (..), RunMapperReader (..)
+                 , FaHProject, Project (..)
+                 , Checked, Unchecked
 
                  , Tool, RunMapper
                  , runTool, runRunMapper
@@ -93,7 +95,17 @@ runRunMapper :: RunMapper a -> RunMapperReader -> IO (Either String a)
 runRunMapper tr = runReaderT (runErrorT tr)
 
 
+data Checked
+data Unchecked
 
+type FaHProject a = Tagged a Project
+
+data Project = Project {
+      projectPath :: FilePath
+    , workPath :: FilePath
+    , numRuns :: RunType
+    , numClones :: CloneType
+    }
 
 
 

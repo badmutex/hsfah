@@ -35,3 +35,4 @@ library
                         FaH.Types
                         FaH.Util
                         FaH.RunMapper
+                        FaH.Project
