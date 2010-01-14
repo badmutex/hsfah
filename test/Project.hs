@@ -1,8 +1,9 @@
 
 
 import FaH.Types
-import FaH.Project
 import FaH.Exceptions
+import FaH.Logging
+import FaH.Util
 import FaH.Tool.Protomol
 import FaH.Tool.Protomol.VMD.RMSD
 
@@ -18,13 +19,13 @@ _fah = "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001"
 proj :: FaHProject Unchecked
 proj = Tagged $ Project { projectPath = _fah
                         , workPath = "/tmp/hsfah/"
-                        , numRuns = 2
-                        , numClones = 6
+                        , numRuns = 1
+                        , numClones = 2
                         }
 
-testvalidate = validate proj
+-- testvalidate = validate proj
 
-infos = toRunInfo . retag $ proj
+infos = toolInfos . retag $ proj
 
 theTool :: Tool ()
 theTool = let ti = ToolInfo r c wa undefined 
@@ -50,4 +51,5 @@ theTool = let ti = ToolInfo r c wa undefined
 
 
 
-presults = doProject infos theTool
+test = do (l,_,chan) <- newLogger
+          mapTool theTool l infos

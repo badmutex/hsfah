@@ -23,17 +23,9 @@ areaPath (Tagged r)
          p
          = p </> "RUN" ++ show r </> "CLONE" ++ show c
 
-toolInfos :: RunInfo -> [ToolInfo]
-toolInfos (RunInfo run clones projarea workarea) =
-    map mk clones
-        where mk c = ToolInfo { run = run
-                              , clone = c
-                              , workArea = workarea
-                              , trajArea = trajPath projarea run c
-                              }
 
-toolInfos' :: FaHProject Checked -> [ToolInfo]
-toolInfos' (Tagged p) = [ mk r c | r <- [0..numRuns p - 1], c <- [0..numClones p - 1] ]
+toolInfos :: FaHProject Checked -> [ToolInfo]
+toolInfos (Tagged p) = [ mk r c | r <- [0..numRuns p - 1], c <- [0..numClones p - 1] ]
     where mk r c = let r' = Tagged r :: Run
                        c' = Tagged c :: Clone
                        mkP = Tagged . areaPath r' c'

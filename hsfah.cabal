@@ -34,5 +34,3 @@ library
                         FaH.Tool.Protomol.VMD.RMSD
                         FaH.Types
                         FaH.Util
-                        FaH.RunMapper
-                        FaH.Project
