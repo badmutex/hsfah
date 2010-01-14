@@ -26,8 +26,6 @@ module FaH.Types ( Run, Clone
                  , getToolInfo, useToolInfo
                  , getToolInfoVal, getRunVal, getCloneVal
 
-                 , mapTool
-
                  ) where
 
 
@@ -80,13 +78,6 @@ type Tool = ErrorT String (ReaderT ToolReader IO)
 
 runTool :: Tool a -> ToolReader -> IO (Either String a)
 runTool t = runReaderT (runErrorT t)
-
-
-mapTool :: Tool a -> Logger -> [ToolInfo] -> IO [Either String a]
-mapTool t l tis = mapM work tis
-    where work ti = runTool t (reader ti)
-          reader ti = Tool l ti
-
 
 
 

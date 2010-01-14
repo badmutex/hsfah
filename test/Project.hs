@@ -4,6 +4,7 @@ import FaH.Types
 import FaH.Exceptions
 import FaH.Logging
 import FaH.Util
+import FaH.Project
 import FaH.Tool.Protomol
 import FaH.Tool.Protomol.VMD.RMSD
 
@@ -44,12 +45,11 @@ theTool = let ti = ToolInfo r c wa undefined
               genparams = genParams fileinfo
               remove ps = [script ps, outfile ps]
           in do addLog "Starting test tool"
-                res <- intercalate "\n" . map show . concat <$> protomol (rmsd genparams remove)
+                res <- protomol (rmsd genparams remove)
                 addLog $ "test tool finished. length: " ++  show (length res)
-                safeLiftIO $ appendFile "/tmp/hsfah.results" $ res ++ "\n"
+                -- safeLiftIO $ appendFile "/tmp/hsfah.results" $ res ++ "\n"
                 return ()
 
 
 
-test = do (l,_,chan) <- newLogger
-          mapTool theTool l infos
+test = doProject proj theTool
