@@ -29,6 +29,8 @@ mapTool t l tis = mapM work tis
 
 
 
+-- | validates the project then runs it if validation is successfull. The resulting eithers are paritioned into
+--  (error messages, results)
 doProject :: FaHProject Unchecked -> Tool a -> IO (Either String ([String], [a]))
 doProject proj tool = do checked <- validate proj
                          case checked of
