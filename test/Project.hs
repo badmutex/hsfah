@@ -41,7 +41,7 @@ theTool = let ti = ToolInfo r c wa undefined
               genparams = genParams fileinfo
               remove ps = [script ps, outfile ps]
           in do addLog "Starting test tool"
-                res <- intercalate "\n" . map show <$> protomol (rmsd genparams remove)
+                res <- intercalate "\n" . map show . nub . concat <$> protomol (rmsd genparams remove)
                 addLog $ "test tool finished. length: " ++  show (length res)
                 safeLiftIO $ appendFile "/tmp/hsfah.results" $ res ++ "\n"
                 return ()
