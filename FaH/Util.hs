@@ -12,10 +12,16 @@ import System.FilePath ((</>))
 
 
 trajPath :: ProjArea -> Run -> Clone -> TrajArea
-trajPath (Tagged wa)
-         (Tagged r)
-         (Tagged c) = Tagged $ wa </> "RUN" ++ show r </> "CLONE" ++ show c
+trajPath (Tagged pa) r c = Tagged $ areaPath r c pa
 
+localWorkArea :: WorkArea -> Run -> Clone -> WorkArea
+localWorkArea (Tagged wa) r c = Tagged $ areaPath r c wa
+
+areaPath :: Run -> Clone -> FilePath -> FilePath
+areaPath (Tagged r)
+         (Tagged c)
+         p
+         = p </> "RUN" ++ show r </> "CLONE" ++ show c
 
 toolInfos :: RunInfo -> [ToolInfo]
 toolInfos (RunInfo run clones projarea workarea) =
@@ -26,12 +32,15 @@ toolInfos (RunInfo run clones projarea workarea) =
                               , trajArea = trajPath projarea run c
                               }
 
-
--- ti = ToolInfo (Tagged 1) (Tagged 2) (Tagged "/tmp/wa") (Tagged "/tmp/ta")
--- trji = TrajInfo (Tagged 1) (map Tagged [0..5]) (Tagged "/tmp/pa") (Tagged "/tmp/wa")
-
--- testtool :: Tool Int
--- testtool = do
---   ti <- getToolInfo
---   addLog "testtool"
---   return . unTagged . clone $ ti
+toolInfos' :: FaHProject Checked -> [ToolInfo]
+toolInfos' (Tagged p) = [ mk r c | r <- [0..numRuns p - 1], c <- [0..numClones p - 1] ]
+    where mk r c = let r' = Tagged r :: Run
+                       c' = Tagged c :: Clone
+                       mkP = Tagged . areaPath r' c'
+                       wa = mkP $ workPath p :: WorkArea
+                       ta = mkP $ projectPath p :: TrajArea
+                   in ToolInfo { run = r'
+                               , clone = c'
+                               , workArea = wa
+                               , trajArea = ta
+                               }
