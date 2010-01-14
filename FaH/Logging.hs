@@ -25,12 +25,3 @@ newLogger = do chan <- newChan
 
 finish :: Chan (Message a) -> IO ()
 finish chan = writeChan chan Stop
-
-
-
-testl = let tool :: Tool ()
-            tool = mapM_ addLog ["hello","world"]
-        in do (l,tid, chan) <- newLogger
-              r <- runTool tool (Tool l undefined)
-              l $ show r
-              writeChan chan Stop

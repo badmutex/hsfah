@@ -3,12 +3,14 @@ module FaH.Project where
 
 import FaH.Types
 import FaH.Logging
-import FaH.RunMapper
+import FaH.Util
 
+import Control.Applicative ((<$>))
 import Control.Concurrent
 import Data.Tagged
 import System.Directory
 import Control.Monad
+import Data.Either
 
 
 -- | verifies that the project data is accessible
@@ -20,14 +22,19 @@ validate p = let true = (== True)
                return $ if pathsOK then Just $ retag p else Nothing
 
 
-toRunInfo :: FaHProject Checked -> [RunInfo]
-toRunInfo p = let p' = unTagged p
-                  ppath = projectPath p'
-                  wpath = workPath p'
-              in [ RunInfo (Tagged r) [ Tagged c | c <- [0..numClones p' - 1] ] (Tagged ppath) (Tagged wpath) |
-                   r <- [0..numRuns p' - 1]
-                 ]
+mapTool :: Tool a -> Logger -> [ToolInfo] -> IO [Either String a]
+mapTool t l tis = mapM work tis
+    where work ti = runTool t (reader ti)
+          reader ti = Tool l ti
 
-doProject runinfo tool = do (l,_,chan) <- newLogger
-                            mapM (\ri -> runRunMapper runMapper (RunMapper l ri tool)) runinfo
 
+
+-- | validates the project then runs it if validation is successfull. The resulting eithers are paritioned into
+--  (error messages, results)
+doProject :: FaHProject Unchecked -> Tool a -> IO (Either String ([String], [a]))
+doProject proj tool = do checked <- validate proj
+                         case checked of
+                           Nothing -> return $ Left "Project could not be validated"
+                           Just p  -> do (l,_,_) <- newLogger
+                                         res <- partitionEithers <$> mapTool tool l (toolInfos p)
+                                         return $ Right res

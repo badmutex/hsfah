@@ -15,17 +15,16 @@ module FaH.Types ( Run, Clone
                  , Log (..)
                  , Logger
 
-                 , ToolInfo (..), RunInfo (..)
-                 , ToolReader (..), RunMapperReader (..)
+                 , ToolInfo (..)
+                 , ToolReader (..)
                  , FaHProject, Project (..)
                  , Checked, Unchecked
 
-                 , Tool, RunMapper
-                 , runTool, runRunMapper
+                 , Tool
+                 , runTool
 
                  , getToolInfo, useToolInfo
                  , getToolInfoVal, getRunVal, getCloneVal
-                 , getRunInfo, getTool
 
                  ) where
 
@@ -74,25 +73,12 @@ data ToolReader = Tool {
     }
 
 
-data RunInfo = RunInfo Run [Clone] ProjArea WorkArea deriving Show
-
-
-data RunMapperReader = RunMapper {
-      runLogger :: Logger
-    , runInfo :: RunInfo
-    , tool :: Tool ()
-    }
 
 type Tool = ErrorT String (ReaderT ToolReader IO)
 
 runTool :: Tool a -> ToolReader -> IO (Either String a)
 runTool t = runReaderT (runErrorT t)
 
-
-type RunMapper = ErrorT String (ReaderT RunMapperReader IO)
-
-runRunMapper :: RunMapper a -> RunMapperReader -> IO (Either String a)
-runRunMapper tr = runReaderT (runErrorT tr)
 
 
 data Checked
@@ -120,11 +106,6 @@ askAddLog f s = do l <- f <$> ask
 instance Log Tool where
     addLog s = askAddLog toolLogger s
 
-instance Log RunMapper where
-    addLog s = askAddLog runLogger s
-
-
-
 
 getToolInfo :: Tool ToolInfo
 getToolInfo = toolInfo `liftM` ask
@@ -140,12 +121,3 @@ getRunVal = getToolInfoVal run
 
 getCloneVal :: Tool CloneType
 getCloneVal = getToolInfoVal clone
-
-
-getRunInfo :: RunMapper RunInfo
-getRunInfo = runInfo <$> ask
-
-getTool :: RunMapper (Tool ())
-getTool = tool <$> ask
-
-
