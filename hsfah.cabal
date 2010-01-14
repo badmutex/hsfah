@@ -30,6 +30,7 @@ library
                         FaH.Archive
                         FaH.Exceptions
                         FaH.Logging
+                        FaH.Project
                         FaH.Tool.Protomol
                         FaH.Tool.Protomol.VMD.RMSD
                         FaH.Types
