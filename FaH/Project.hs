@@ -18,7 +18,7 @@ validate :: FaHProject Unchecked -> IO (Maybe (FaHProject Checked))
 validate p = let true = (== True)
                  p' = unTagged p
              in do
-               pathsOK <- all true `fmap` mapM doesDirectoryExist [projectPath p', workPath p']
+               pathsOK <- all true `fmap` mapM doesDirectoryExist [projectPath p']
                return $ if pathsOK then Just $ retag p else Nothing
 
 
@@ -35,6 +35,8 @@ doProject :: FaHProject Unchecked -> Tool a -> IO (Either String ([String], [a])
 doProject proj tool = do checked <- validate proj
                          case checked of
                            Nothing -> return $ Left "Project could not be validated"
-                           Just p  -> do (l,_,_) <- newLogger
+                           Just p  -> do createDirectoryIfMissing True (workPath $ unTagged p)
+                                         (l,_,_) <- newLogger
                                          res <- partitionEithers <$> mapTool tool l (toolInfos p)
+                                         removeDirectoryRecursive (workPath $ unTagged p)
                                          return $ Right res
