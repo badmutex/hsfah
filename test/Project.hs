@@ -49,12 +49,19 @@ theTool = let ti = ToolInfo r c wa undefined
                 safeLiftIO $ appendFile "/tmp/hsfah.results" $ res ++ "\n"
                 return ()
 
-theTool2 :: Tool ()
-theTool2 = let tr = undefined :: ToolReader
-           in do
-             gen <- generation
-             frames <- frames (CatDCD "catdcd") (DCDFile "ww.dcd")
-             addLog $ printf "+=+=+=+=+=+= Gen %d Frames %s" gen (show frames)
+theTool2 :: FilePath -> Tool ()
+theTool2 outfile = do
+  gen    <- generation
+  frames <- frames (CatDCD "catdcd") (DCDFile "ww.dcd")
+
+  r      <- getRunVal
+  c      <- getCloneVal
 
 
-test = doProject proj (protomol theTool2)
+  let out = printf "%d|%d|%d|%d" r c gen frames
+  safeLiftIO $ appendFile outfile (out ++ "\n")
+
+  addLog out
+
+
+test = doProject proj (protomol $ theTool2 "/tmp/genframes.txt")
