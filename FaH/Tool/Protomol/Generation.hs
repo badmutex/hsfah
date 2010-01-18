@@ -12,7 +12,7 @@ import System.FilePath
 
 -- | Converts the workpath such as "/tmp/wa/results-123" to 123
 pathToGenNum :: WorkArea -> Int
-pathToGenNum (Tagged p) = read . filter isDigit $ p
+pathToGenNum (Tagged p) = read . filter isDigit . takeBaseName $ p
 
 
 -- | Converts the workpath such as "/tmp/wa/results-123" to 123
