@@ -8,6 +8,7 @@ import FaH.Project
 import FaH.Tool.Protomol
 import FaH.Tool.Protomol.Generation
 import FaH.Tool.Protomol.CountFrames
+import FaH.Tool.Protomol.FramesPerGeneration
 import FaH.Tool.Protomol.VMD.RMSD
 
 import Control.Applicative ((<$>))
@@ -51,17 +52,11 @@ theTool = let ti = ToolInfo r c wa undefined
 
 theTool2 :: FilePath -> Tool ()
 theTool2 outfile = do
-  gen    <- generation
-  frames <- frames (CatDCD "catdcd") (DCDFile "ww.dcd")
+  (g,f) <- framesPerGeneration (CatDCD "catdcd") (DCDFile "ww.dcd")
+  r <- getRunVal
+  c <- getCloneVal
 
-  r      <- getRunVal
-  c      <- getCloneVal
-
-
-  let out = printf "%d|%d|%d|%d" r c gen frames
-  safeLiftIO $ appendFile outfile (out ++ "\n")
-
-  addLog out
+  safeLiftIO $ appendFile outfile $ printf "%d|%d|%d|%d\n" r c g f
 
 
 test = doProject proj (protomol $ theTool2 "/tmp/genframes.txt") (Tagged 1, Tagged 2)
