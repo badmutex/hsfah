@@ -25,13 +25,17 @@ library
                         tagged >= 0.0,
                         unix >= 2.3.2.0,
                         MissingH >= 1.1.0.1,
-                        random >= 1.0.0.1
+                        random >= 1.0.0.1,
+                        parsec >= 2.1.0.1
     exposed-modules:
                         FaH.Archive
                         FaH.Exceptions
                         FaH.Logging
                         FaH.Project
                         FaH.Tool.Protomol
+                        FaH.Tool.Protomol.CountFrames
+                        FaH.Tool.Protomol.Generation
+                        FaH.Tool.Protomol.FramesPerGeneration
                         FaH.Tool.Protomol.VMD.RMSD
                         FaH.Types
                         FaH.Util
