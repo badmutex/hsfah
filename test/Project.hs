@@ -23,7 +23,7 @@ _fah = "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001"
 proj :: FaHProject Unchecked
 proj = Tagged $ Project { projectPath = _fah
                         , workPath = "/tmp/hsfah/"
-                        , numRuns = 1
+                        , numRuns = 100
                         , numClones = 2
                         }
 
@@ -64,4 +64,4 @@ theTool2 outfile = do
   addLog out
 
 
-test = doProject proj (protomol $ theTool2 "/tmp/genframes.txt")
+test = doProject proj (protomol $ theTool2 "/tmp/genframes.txt") (Tagged 1, Tagged 2)

@@ -1,5 +1,5 @@
 
-module FaH.Project where
+module FaH.Project (doProject) where
 
 import FaH.Types
 import FaH.Logging
@@ -28,15 +28,25 @@ mapTool t l tis = mapM work tis
           reader ti = Tool l ti
 
 
+-- | Filter the ToolInfos given a range of run values (low inclusive, high non-inclusive)
+runRange :: (Run,Run) -> [ToolInfo] -> [ToolInfo]
+runRange (rl,rh) = filter f
+    where f ti = let r = unTagged . run $ ti
+                     l = unTagged rl
+                     h = unTagged rh
+                 in l <= r && r < h
 
--- | validates the project then runs it if validation is successfull. The resulting eithers are paritioned into
---  (error messages, results)
-doProject :: FaHProject Unchecked -> Tool a -> IO (Either String ([String], [a]))
-doProject proj tool = do checked <- validate proj
-                         case checked of
-                           Nothing -> return $ Left "Project could not be validated"
-                           Just p  -> do createDirectoryIfMissing True (workPath $ unTagged p)
-                                         (l,_,_) <- newLogger
-                                         res <- partitionEithers <$> mapTool tool l (toolInfos p)
-                                         removeDirectoryRecursive (workPath $ unTagged p)
-                                         return $ Right res
+
+
+-- | Validates the project then runs it on the givin range of runs if validation is successfull.
+--   The resulting eithers are paritioned into (error messages, results)
+doProject :: FaHProject Unchecked -> Tool a -> (Run,Run) -> IO (Either String ([String], [a]))
+doProject proj tool range = do
+  checked <- validate proj
+  case checked of
+    Nothing -> return $ Left "Project could not be validated"
+    Just p  -> do createDirectoryIfMissing True (workPath $ unTagged p)
+                  (l,_,_) <- newLogger
+                  res <- partitionEithers <$> mapTool tool l (runRange range $ toolInfos p)
+                  removeDirectoryRecursive (workPath $ unTagged p)
+                  return $ Right res
