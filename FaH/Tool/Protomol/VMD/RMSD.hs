@@ -2,7 +2,13 @@
   EmptyDataDecls
   #-}
 
-module FaH.Tool.Protomol.VMD.RMSD where
+module FaH.Tool.Protomol.VMD.RMSD ( AtomSelect, Script, Cmd, CmdParams (..)
+                                  , GenCmdParams, ChooseRemovableFiles
+                                  , genParams
+                                  , FileInfo (..)
+                                  , Output (..)
+                                  , rmsd
+                                  ) where
 
 
 import FaH.Types
@@ -140,8 +146,8 @@ rmsd genParams removableFiles = do
   liftExitCode $ runCmd cmd
 
   results <- safeLiftIO $ rmsd_results (outfile params)
-  liftIO . mapM_ removeLink $ removableFiles params
-  addLog' "sucess!"
+  safeLiftIO . mapM_ removeLink $ removableFiles params
+
   return results
 
 -- ======================================== --

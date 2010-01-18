@@ -1,5 +1,5 @@
 
-module FaH.Tool.Protomol.Generation (generation) where
+module FaH.Tool.Protomol.Generation (GenerationType, generation) where
 
 import FaH.Types
 
@@ -10,11 +10,14 @@ import Control.Applicative ((<$>))
 import System.FilePath
 
 
--- | Converts the workpath such as "/tmp/wa/results-123" to 123
-pathToGenNum :: WorkArea -> Int
+type GenerationType = Int
+
+
+-- | Converts the workpath such as '/tmp/wa/results-123' to 123
+pathToGenNum :: WorkArea -> GenerationType
 pathToGenNum (Tagged p) = read . filter isDigit . takeBaseName $ p
 
 
--- | Converts the workpath such as "/tmp/wa/results-123" to 123
-generation :: Tool Int
+-- | Converts the workpath such as '/tmp/wa/results-123' to 123
+generation :: Tool GenerationType
 generation = pathToGenNum . workArea <$> getToolInfo
