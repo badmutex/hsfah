@@ -19,7 +19,8 @@ import Data.List
 import Text.Printf
 
 
-_fah = "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001"
+--_fah = "/home/badi/Research/fah/afs-crc-fah/fahnd01/data01/data/PROJ10001"
+_fah = "/home/badi/Research/fah/test"
 
 proj :: FaHProject Unchecked
 proj = Tagged $ Project { projectPath = _fah
@@ -56,7 +57,10 @@ theTool2 outfile = do
   r <- getRunVal
   c <- getCloneVal
 
+  addLog "[Test.Project]"
+
   safeLiftIO $ appendFile outfile $ printf "%d|%d|%d|%d\n" r c g f
 
 
 test = doProject proj (protomol $ theTool2 "/tmp/genframes.txt") (Tagged 1, Tagged 2)
+       >>= \_ -> return ()
