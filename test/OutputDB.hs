@@ -19,8 +19,8 @@ proj = Tagged $ Project { projectPath = "/home/badi/Research/fah/tmp"
 thetool :: Tool [()]
 thetool = protomol $ do
   (_,f) <- framesPerGeneration catdcd dcdfile
-  tb <- tarball
-  fmt <- formatAll [show f, show tb]
+  mtime <- tarballModificationTime
+  fmt <- formatAll [show f, show mtime]
   addLog fmt
 
 go = doProject proj thetool (Tagged 0, Tagged 1)

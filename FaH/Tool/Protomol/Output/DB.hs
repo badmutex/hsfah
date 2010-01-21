@@ -20,7 +20,7 @@ addLog' = addLog . printf "[%s] %s" _name
 
 format :: Char -> Int -> String -> String
 format c n fmt = let c' = [c]
-           in flip (++) c' . intercalate c' $ replicate n fmt
+           in intercalate c' $ replicate n fmt
 
 formatAll' :: Char -> [String] -> Tool String
 formatAll' sep vals = do
