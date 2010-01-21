@@ -1,7 +1,5 @@
 
-module FaH.Tool.Protomol.FramesPerGeneration ( module FaH.Tool.Protomol.CountFrames
-                                             , module FaH.Tool.Protomol.Generation
-                                             , framesPerGeneration
+module FaH.Tool.Protomol.FramesPerGeneration ( framesPerGeneration
                                              ) where
 
 import FaH.Types

@@ -2,9 +2,7 @@
 
 import FaH.Types
 import FaH.Project
-import FaH.Tool.Protomol
-import FaH.Tool.Protomol.FramesPerGeneration
-import FaH.Tool.Protomol.Output.DB
+import FaH.Tool.ProtomolTools
 
 import Data.Tagged
 import Text.Printf

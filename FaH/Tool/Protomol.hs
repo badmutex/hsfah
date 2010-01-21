@@ -2,7 +2,7 @@
   NoMonomorphismRestriction
   #-}
 
-module FaH.Tool.Protomol where
+module FaH.Tool.Protomol ( protomol ) where
 
 import FaH.Types
 import FaH.Archive
