@@ -18,7 +18,6 @@ import FaH.Exceptions
 import Control.Concurrent
 import Control.Monad.Trans (liftIO)
 
-import Data.Tagged
 import Data.List (intercalate)
 import Text.Printf
 

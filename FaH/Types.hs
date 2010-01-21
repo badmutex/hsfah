@@ -26,6 +26,9 @@ module FaH.Types ( Run, Clone
                  , getToolInfo, useToolInfo
                  , getToolInfoVal, getRunVal, getCloneVal
 
+                 , module Data.Tagged
+                 , module Control.Applicative
+
                  ) where
 
 

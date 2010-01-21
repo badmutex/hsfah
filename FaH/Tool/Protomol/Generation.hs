@@ -1,9 +1,8 @@
-
+-- | Figure out the generation currently being worked on
 module FaH.Tool.Protomol.Generation (GenerationType, generation) where
 
 import FaH.Types
 
-import Data.Tagged
 import Data.Char
 
 import Control.Applicative ((<$>))

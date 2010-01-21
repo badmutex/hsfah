@@ -16,7 +16,6 @@ import Control.Monad.List
 import Control.Monad.Reader
 
 import Data.List (sort)
-import Data.Tagged
 
 import System.FilePath
 import System.Path.Glob

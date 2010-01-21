@@ -8,7 +8,6 @@ module FaH.Tool.Protomol.CountFrames ( CatDCD (..)
 import FaH.Types
 import FaH.Exceptions
 
-import Data.Tagged
 import Control.Applicative ((<$>))
 import Text.ParserCombinators.Parsec
 import System.Process

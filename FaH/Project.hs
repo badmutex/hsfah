@@ -7,7 +7,6 @@ import FaH.Util
 
 import Control.Applicative ((<$>))
 import Control.Concurrent
-import Data.Tagged
 import System.Directory
 import Control.Monad
 import Data.Either

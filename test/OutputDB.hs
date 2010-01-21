@@ -3,7 +3,6 @@
 import FaH
 import FaH.Tool.ProtomolTools
 
-import Data.Tagged
 import Text.Printf
 
 catdcd = CatDCD "/home/badi/apps/vmd/bin/catdcd"
@@ -20,7 +19,8 @@ proj = Tagged $ Project { projectPath = "/home/badi/Research/fah/tmp"
 thetool :: Tool [()]
 thetool = protomol $ do
   (_,f) <- framesPerGeneration catdcd dcdfile
-  fmt <- formatAll [show f]
+  tb <- tarball
+  fmt <- formatAll [show f, show tb]
   addLog fmt
 
 go = doProject proj thetool (Tagged 0, Tagged 1)

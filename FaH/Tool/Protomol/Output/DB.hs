@@ -1,5 +1,10 @@
 
-module FaH.Tool.Protomol.Output.DB where
+module FaH.Tool.Protomol.Output.DB ( formatAll
+                                   , formatAll'
+
+                                   , formatRunCloneGen
+                                   , formatRunCloneGen'
+                                   ) where
 
 import FaH.Types
 import FaH.Tool.Protomol.Generation
@@ -21,9 +26,7 @@ formatAll' :: Char -> [String] -> Tool String
 formatAll' sep vals = do
   rcg <- formatRunCloneGen' sep
   let rest = intercalate [sep] vals
-      fmts = intercalate [sep] $ map (\_ -> "%s") vals
-      fmt  = "%s" ++ fmts
-  return $ printf fmt rcg rest
+  return $ printf "%s%c%s" rcg sep rest
 
 
 formatRunCloneGen' :: Char -> Tool String

@@ -3,8 +3,6 @@ module FaH.Util where
 
 import FaH.Types
 
-
-import Data.Tagged
 import System.FilePath ((</>))
 
 
