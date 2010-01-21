@@ -28,11 +28,13 @@ library
                         random >= 1.0.0.1,
                         parsec >= 2.1.0.1
     exposed-modules:
+                        FaH
                         FaH.Archive
                         FaH.Exceptions
                         FaH.Logging
                         FaH.Project
                         FaH.Tool.Protomol
+                        FaH.Tool.ProtomolTools
                         FaH.Tool.Protomol.CountFrames
                         FaH.Tool.Protomol.Generation
                         FaH.Tool.Protomol.FramesPerGeneration

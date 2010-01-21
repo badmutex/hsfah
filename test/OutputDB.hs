@@ -1,7 +1,6 @@
 
 
-import FaH.Types
-import FaH.Project
+import FaH
 import FaH.Tool.ProtomolTools
 
 import Data.Tagged
