@@ -35,9 +35,16 @@ library
                         FaH.Project
                         FaH.Tool.Protomol
                         FaH.Tool.ProtomolTools
+
                         FaH.Tool.Protomol.CountFrames
-                        FaH.Tool.Protomol.Generation
                         FaH.Tool.Protomol.FramesPerGeneration
+                        FaH.Tool.Protomol.Generation
+                        FaH.Tool.Protomol.Output.DB
                         FaH.Tool.Protomol.VMD.RMSD
+                        FaH.Tool.Protomol.Tarball
+                        FaH.Tool.Protomol.TarballModificationTime
+                        FaH.Tool.Protomol.AcceptFrames
+                        FaH.Tool.Protomol.Output.Predicate
+
                         FaH.Types
                         FaH.Util
