@@ -1,5 +1,6 @@
 
 import FaH
+import FaH.Exceptions
 import FaH.Tool.ProtomolTools
 
 
@@ -22,6 +23,6 @@ pred' = accept catdcd dcdfile nframes
 thetool = protomol $ do
             mtime <- tarballModificationTime
             fmt <- flip (++) "\n" <$> formatAll [show mtime]
-            predicate pred' (appendFile "/tmp/pred.out" fmt)
+            predicate pred' (safeLiftIO $ appendFile "/tmp/pred.out" fmt)
 
 go = doProject proj thetool (Tagged 0, Tagged 1)
